@@ -1,0 +1,28 @@
+[package]
+name = "mastermind-app"
+version = "0.1.0"
+description = "Advanced multi-agent LLM system with memory capabilities"
+authors = ["t4ai"]
+license = "MIT"
+repository = ""
+default-run = "mastermind-app"
+edition = "2021"
+rust-version = "1.59"
+
+[build-dependencies]
+tauri-build = { version = "1.5.0", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+tauri = { version = "1.5.0", features = [ "dialog-all", "fs-all", "shell-open"] }
+
+[features]
+default = [ "custom-protocol" ]
+custom-protocol = [ "tauri/custom-protocol" ]
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
