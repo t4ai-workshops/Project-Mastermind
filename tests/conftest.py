@@ -1,15 +1,14 @@
+"""Test configuration for Project MasterMind."""
+
 import pytest
 
-
+# Register the asyncio plugin
 pytest_plugins = ['pytest_asyncio']
 
-
 def pytest_configure(config):
-    config.addinivalue_line(
-        "asyncio_mode",
-        "auto"
-    )
-    config.addinivalue_line(
-        "markers",
-        "asyncio: mark test as async"
+    """Configure pytest for async testing."""
+    config.addini(
+        'asyncio_mode',
+        'default mode for async fixtures',
+        default='auto'
     )
