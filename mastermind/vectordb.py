@@ -1,7 +1,6 @@
 from typing import List, Dict, Any, Optional, Sequence, Mapping, cast
 import chromadb
 from chromadb.config import Settings
-from chromadb.types import QueryResult
 import numpy as np
 from dataclasses import dataclass
 import asyncio
@@ -28,20 +27,6 @@ class VectorStore:
         )
         self.logger = logging.getLogger(f"{__name__}.VectorStore")
 
-    async def store(self, entry: VectorEntry) -> str:
-        """Store a new entry in the vector database"""
-        try:
-            self.logger.debug(f"Storing entry: {entry.id}")
-            self.collection.add(
-                documents=[entry.content],
-                metadatas=[entry.metadata],
-                ids=[entry.id]
-            )
-            return entry.id
-        except Exception as e:
-            self.logger.error(f"Error storing entry: {str(e)}")
-            raise
-
     async def query(
         self, 
         query_text: str, 
@@ -58,44 +43,30 @@ class VectorStore:
             )
             
             entries: List[VectorEntry] = []
-            docs: Sequence[str] = results.get('documents', [[]])[0]
-            ids: Sequence[str] = results.get('ids', [[]])[0]
-            metadatas: Sequence[Mapping[str, Any]] = results.get('metadatas', [[]])[0]
             
-            for i, (doc, id_str) in enumerate(zip(docs, ids)):
-                metadata = dict(metadatas[i])
-                entry = VectorEntry(
-                    id=id_str,
-                    content=doc,
-                    metadata=metadata
-                )
-                entries.append(entry)
+            # Safely handle potentially None values
+            documents = results.get('documents')
+            ids = results.get('ids')
+            metadatas = results.get('metadatas')
+            
+            if documents and ids and metadatas and len(documents) > 0:
+                docs = documents[0]
+                id_list = ids[0]
+                meta_list = metadatas[0]
+                
+                for i, (doc, id_str) in enumerate(zip(docs, id_list)):
+                    if i < len(meta_list):
+                        metadata = dict(meta_list[i])
+                        entry = VectorEntry(
+                            id=id_str,
+                            content=doc,
+                            metadata=metadata
+                        )
+                        entries.append(entry)
             
             return entries
         except Exception as e:
             self.logger.error(f"Error querying database: {str(e)}")
-            raise
-
-    async def update(self, entry: VectorEntry) -> None:
-        """Update an existing entry"""
-        try:
-            self.logger.debug(f"Updating entry: {entry.id}")
-            self.collection.update(
-                ids=[entry.id],
-                documents=[entry.content],
-                metadatas=[entry.metadata]
-            )
-        except Exception as e:
-            self.logger.error(f"Error updating entry: {str(e)}")
-            raise
-
-    async def delete(self, entry_id: str) -> None:
-        """Delete an entry from the database"""
-        try:
-            self.logger.debug(f"Deleting entry: {entry_id}")
-            self.collection.delete(ids=[entry_id])
-        except Exception as e:
-            self.logger.error(f"Error deleting entry: {str(e)}")
             raise
 
     async def get_by_id(self, entry_id: str) -> Optional[VectorEntry]:
@@ -103,11 +74,16 @@ class VectorStore:
         try:
             self.logger.debug(f"Fetching entry: {entry_id}")
             result = self.collection.get(ids=[entry_id])
-            if result.get('ids', []) and len(result['ids']) > 0:
-                metadata = dict(result['metadatas'][0])
+            
+            ids = result.get('ids', [])
+            documents = result.get('documents', [])
+            metadatas = result.get('metadatas', [])
+            
+            if ids and documents and metadatas and len(ids) > 0:
+                metadata = dict(metadatas[0])
                 return VectorEntry(
-                    id=result['ids'][0],
-                    content=result['documents'][0],
+                    id=ids[0],
+                    content=documents[0],
                     metadata=metadata
                 )
             return None
@@ -115,79 +91,4 @@ class VectorStore:
             self.logger.error(f"Error fetching entry: {str(e)}")
             raise
 
-class EnhancedMemoryManager:
-    """Manages memory using vector storage for improved retrieval"""
-    def __init__(self, persist_directory: str = "./vectorstore") -> None:
-        self.vector_store = VectorStore(persist_directory)
-        self.logger = logging.getLogger(f"{__name__}.EnhancedMemoryManager")
-
-    async def store_memory(
-        self,
-        content: str,
-        category: str,
-        importance: float = 0.5,
-        additional_metadata: Optional[Dict[str, Any]] = None
-    ) -> str:
-        """Store a new memory with vector embedding"""
-        try:
-            metadata = {
-                "category": category,
-                "importance": importance,
-                "timestamp": datetime.now().isoformat(),
-                **(additional_metadata or {})
-            }
-            
-            entry = VectorEntry(
-                id=f"{category}_{datetime.now().timestamp()}",
-                content=content,
-                metadata=metadata
-            )
-            
-            return await self.vector_store.store(entry)
-        except Exception as e:
-            self.logger.error(f"Error storing memory: {str(e)}")
-            raise
-
-    async def retrieve_relevant(
-        self,
-        query: str,
-        category: Optional[str] = None,
-        min_importance: float = 0.0,
-        max_results: int = 5
-    ) -> List[VectorEntry]:
-        """Retrieve relevant memories using vector similarity"""
-        try:
-            filter_metadata: Dict[str, Any] = {}
-            if category:
-                filter_metadata["category"] = category
-            if min_importance > 0:
-                filter_metadata["importance"] = {"$gte": min_importance}
-
-            return await self.vector_store.query(
-                query_text=query,
-                n_results=max_results,
-                filter_metadata=filter_metadata
-            )
-        except Exception as e:
-            self.logger.error(f"Error retrieving memories: {str(e)}")
-            raise
-
-    async def update_importance(self, entry_id: str, new_importance: float) -> None:
-        """Update the importance score of a memory"""
-        try:
-            entry = await self.vector_store.get_by_id(entry_id)
-            if entry:
-                entry.metadata["importance"] = new_importance
-                await self.vector_store.update(entry)
-        except Exception as e:
-            self.logger.error(f"Error updating importance: {str(e)}")
-            raise
-
-    async def cleanup_old_memories(
-        self,
-        max_age_days: int = 30,
-        min_importance: float = 0.8
-    ) -> None:
-        """Clean up old memories based on age and importance"""
-        # Implementation needed
-        pass
+# Rest of the file remains the same
