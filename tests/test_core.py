@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 from mastermind.core import ModelType, TaskResult, WorkerAgent, StrategistAgent
 
 
@@ -18,46 +18,52 @@ def test_task_result():
 
 
 @pytest.mark.asyncio
-async def test_worker_agent(mocker):
-    # Create mock response with async create method
-    mock_response = mocker.Mock()
-    mock_response.content = "test response"
-
-    # Create messages mock
-    mock_messages = mocker.Mock()
-    mock_messages.create = AsyncMock(return_value=mock_response)
-
-    # Create client mock
-    mock_client = mocker.Mock()
-    mock_client.messages = mock_messages
-
+async def test_worker_agent():
+    # Create a proper async mock for the client
+    mock_client = MagicMock()
+    mock_client.messages = MagicMock()
+    
+    # The create method should be an AsyncMock with a proper return value structure
+    mock_create = AsyncMock()
+    mock_create.return_value.content = "test response"
+    mock_client.messages.create = mock_create
+    
     # Create agent with mock client
     agent = WorkerAgent(mock_client)
-
+    
     # Test processing
     result = await agent.process("test task")
     assert result.success
     assert result.data == "test response"
+    
+    # Verify correct model was used
+    mock_create.assert_called_once()
+    call_args = mock_create.call_args[1]  # Get kwargs of the call
+    assert call_args['model'] == ModelType.HAIKU.value
+    assert call_args['max_tokens'] == 1024
+    assert call_args['messages'][0]['content'] == "test task"
 
 
 @pytest.mark.asyncio
-async def test_strategist_agent(mocker):
-    # Create mock response with async create method
-    mock_response = mocker.Mock()
-    mock_response.content = "strategy response"
-
-    # Create messages mock
-    mock_messages = mocker.Mock()
-    mock_messages.create = AsyncMock(return_value=mock_response)
-
-    # Create client mock
-    mock_client = mocker.Mock()
-    mock_client.messages = mock_messages
-
+async def test_strategist_agent():
+    # Create a proper async mock for the client
+    mock_client = MagicMock()
+    mock_client.messages = MagicMock()
+    
+    # The create method should be an AsyncMock with a proper return value structure
+    mock_create = AsyncMock()
+    mock_create.return_value.content = "strategy response"
+    mock_client.messages.create = mock_create
+    
     # Create agent with mock client
     agent = StrategistAgent(mock_client)
-
+    
     # Test processing
     result = await agent.process("test task")
     assert result.success
     assert result.data == "strategy response"
+    
+    # Verify correct model was used
+    mock_create.assert_called_once()
+    call_args = mock_create.call_args[1]  # Get kwargs of the call
+    assert call_args['model'] == ModelType.SONNET.value
