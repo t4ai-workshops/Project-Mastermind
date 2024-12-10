@@ -13,11 +13,22 @@ def test_task_result():
     assert result.error is None
     assert result.metadata is None
 
+class AsyncMock:
+    def __init__(self, return_value):
+        self.return_value = return_value
+
+    async def __call__(self, *args, **kwargs):
+        return self.return_value
+
 @pytest.mark.asyncio
 async def test_worker_agent(mocker):
+    # Create a mock response object
+    mock_response = mocker.Mock()
+    mock_response.content = "test response"
+    
     # Mock the Anthropic client
     mock_client = mocker.Mock()
-    mock_client.messages.create.return_value = mocker.Mock(content="test response")
+    mock_client.messages.create = AsyncMock(mock_response)
     
     # Create agent with mock client
     agent = WorkerAgent(mock_client)
@@ -29,9 +40,13 @@ async def test_worker_agent(mocker):
 
 @pytest.mark.asyncio
 async def test_strategist_agent(mocker):
+    # Create a mock response object
+    mock_response = mocker.Mock()
+    mock_response.content = "strategy response"
+    
     # Mock the Anthropic client
     mock_client = mocker.Mock()
-    mock_client.messages.create.return_value = mocker.Mock(content="strategy response")
+    mock_client.messages.create = AsyncMock(mock_response)
     
     # Create agent with mock client
     agent = StrategistAgent(mock_client)
