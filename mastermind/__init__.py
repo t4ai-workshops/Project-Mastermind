@@ -1,4 +1,18 @@
-from mastermind.core import Orchestrator, WorkerAgent, StrategistAgent, TaskResult, ModelType
+"""MasterMind - Advanced multi-agent system leveraging different LLM models."""
+
+from mastermind.core import (
+    Orchestrator,
+    WorkerAgent,
+    StrategistAgent,
+    TaskResult,
+    ModelType,
+)
 
 __version__ = '0.1.0'
-__all__ = ['Orchestrator', 'WorkerAgent', 'StrategistAgent', 'TaskResult', 'ModelType']
+__all__ = [
+    'Orchestrator',
+    'WorkerAgent',
+    'StrategistAgent',
+    'TaskResult',
+    'ModelType',
+]
