@@ -27,6 +27,8 @@ dependencies = [
     "anthropic>=0.8.0",
     "asyncio>=3.4.3",
     "typing-extensions>=4.7.1",
+    "chromadb>=0.4.14",
+    "numpy>=1.24.0",
 ]
 
 [project.optional-dependencies]
@@ -38,6 +40,9 @@ test = [
     "mypy",
     "flake8",
 ]
+
+[tool.hatch.build.targets.wheel]
+packages = ["mastermind"]
 
 [tool.pytest.ini_options]
 addopts = "-ra -q"
@@ -64,5 +69,5 @@ warn_no_return = true
 warn_unreachable = true
 
 [[tool.mypy.overrides]]
-module = "anthropic.*"
+module = ["anthropic.*", "chromadb.*"]
 ignore_missing_imports = true
