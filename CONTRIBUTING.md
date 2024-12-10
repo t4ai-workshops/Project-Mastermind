@@ -1,58 +1,60 @@
 # Contributing to Project MasterMind
 
-We love your input! We want to make contributing to Project MasterMind as easy and transparent as possible, whether it's:
+We love your input! We want to make contributing to Project MasterMind as easy and transparent as possible.
 
-- Reporting a bug
-- Discussing the current state of the code
-- Submitting a fix
-- Proposing new features
-- Becoming a maintainer
+## Development Setup
 
-## We Develop with Github
-We use Github to host code, to track issues and feature requests, as well as accept pull requests.
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR-USERNAME/Project-Mastermind.git`
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## Pull Requests
-1. Fork the repo and create your branch from `main`.
-2. If you've added code that should be tested, add tests.
-3. If you've changed APIs, update the documentation.
-4. Ensure the test suite passes.
-5. Make sure your code lints.
-6. Issue that pull request!
+4. Set up your API key:
+   - You need your own Anthropic API key for development and testing
+   - Create a .env file in the project root:
+     ```bash
+     echo "ANTHROPIC_API_KEY=your-api-key-here" > .env
+     ```
+   - ⚠️ Never commit this file to git!
+   - The .env file is already in .gitignore
 
-## Any contributions you make will be under the MIT Software License
-In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
+5. Verify your setup:
+   ```bash
+   pytest tests/
+   ```
 
-## Report bugs using Github's [issue tracker](https://github.com/t4ai-workshops/Project-Mastermind/issues)
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/t4ai-workshops/Project-Mastermind/issues/new); it's that easy!
+## API Key Usage
 
-## Write bug reports with detail, background, and sample code
-
-**Great Bug Reports** tend to have:
-
-- A quick summary and/or background
-- Steps to reproduce
-  - Be specific!
-  - Give sample code if you can.
-- What you expected would happen
-- What actually happens
-- Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
+- Each developer needs their own Anthropic API key
+- Your key is used only in your local environment and your fork
+- The main repository's CI/CD uses a separate key
+- Contributors never have access to the main repository's key
+- When submitting PRs, tests will run using the main repository's key
 
 ## Development Process
-We follow a simplified version of the GitFlow workflow:
 
-1. Fork the project
-2. Create a feature branch
-3. Commit your changes
-4. Push to your fork
-5. Open a Pull Request
+1. Create a new branch: `git checkout -b feature-name`
+2. Make your changes
+3. Run tests locally (using your API key)
+4. Commit your changes
+5. Push to your fork
+6. Create a Pull Request
 
-## Use a Consistent Coding Style
+## Writing Tests
 
-* Use Python's [PEP 8](https://www.python.org/dev/peps/pep-0008/) style guide
-* Use meaningful variable names
-* Keep functions focused and modular
-* Add comments for complex logic
-* Include type hints where appropriate
+- All new features should include tests
+- Run tests locally before submitting PR: `pytest tests/`
+- Tests should work with CI/CD environment
+- Include proper error handling for API-related functions
+
+## Pull Request Process
+
+1. Update documentation if needed
+2. Update the README.md if needed
+3. The PR must pass all tests
+4. Get approval from at least one maintainer
 
 ## License
-By contributing, you agree that your contributions will be licensed under its MIT License.
+By contributing, you agree that your contributions will be licensed under the MIT License.

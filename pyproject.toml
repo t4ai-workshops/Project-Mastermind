@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "project-mastermind"
+version = "0.1.0"
+description = "An advanced multi-agent system leveraging different LLM models for enhanced cognitive capabilities"
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+keywords = ["ai", "llm", "multi-agent", "claude"]
+authors = [
+  { name = "t4ai-workshops", email = "your-email@t4ai.be" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+    "anthropic>=0.8.0",
+    "asyncio>=3.4.3",
+    "typing-extensions>=4.7.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-asyncio",
+    "pytest-cov",
+    "mypy",
+    "flake8",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+pythonpath = [
+    "."
+]
+asyncio_mode = "auto"
