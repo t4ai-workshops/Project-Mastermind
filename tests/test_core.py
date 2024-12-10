@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import AsyncMock as AsyncMockBase
 from mastermind.core import ModelType, TaskResult, WorkerAgent, StrategistAgent
 
 def test_model_types():
@@ -13,22 +14,15 @@ def test_task_result():
     assert result.error is None
     assert result.metadata is None
 
-class AsyncMock:
-    def __init__(self, return_value):
-        self.return_value = return_value
-
-    async def __call__(self, *args, **kwargs):
-        return self.return_value
-
 @pytest.mark.asyncio
 async def test_worker_agent(mocker):
-    # Create a mock response object
-    mock_response = mocker.Mock()
-    mock_response.content = "test response"
+    # Create a mock messages object with async create method
+    mock_messages = mocker.Mock()
+    mock_messages.create = AsyncMockBase(return_value=mocker.Mock(content="test response"))
     
-    # Mock the Anthropic client
+    # Create mock client with messages attribute
     mock_client = mocker.Mock()
-    mock_client.messages.create = AsyncMock(mock_response)
+    mock_client.messages = mock_messages
     
     # Create agent with mock client
     agent = WorkerAgent(mock_client)
@@ -37,16 +31,23 @@ async def test_worker_agent(mocker):
     result = await agent.process("test task")
     assert result.success
     assert result.data == "test response"
+    
+    # Verify the mock was called correctly
+    mock_messages.create.assert_called_once_with(
+        model="claude-3-haiku",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": "test task"}]
+    )
 
 @pytest.mark.asyncio
 async def test_strategist_agent(mocker):
-    # Create a mock response object
-    mock_response = mocker.Mock()
-    mock_response.content = "strategy response"
+    # Create a mock messages object with async create method
+    mock_messages = mocker.Mock()
+    mock_messages.create = AsyncMockBase(return_value=mocker.Mock(content="strategy response"))
     
-    # Mock the Anthropic client
+    # Create mock client with messages attribute
     mock_client = mocker.Mock()
-    mock_client.messages.create = AsyncMock(mock_response)
+    mock_client.messages = mock_messages
     
     # Create agent with mock client
     agent = StrategistAgent(mock_client)
@@ -55,3 +56,7 @@ async def test_strategist_agent(mocker):
     result = await agent.process("test task")
     assert result.success
     assert result.data == "strategy response"
+    
+    # Verify the mock was called with correct model
+    mock_messages.create.assert_called_once()
+    assert mock_messages.create.call_args[1]["model"] == "claude-3.5-sonnet"
