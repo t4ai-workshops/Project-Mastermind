@@ -1,7 +1,12 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol
 from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
+
+T = TypeVar('T')
+
+class AsyncCallable(Protocol):
+    async def __call__(self, *args: Any, **kwargs: Any) -> Any: ...
 
 @dataclass
 class MCPResource:
@@ -16,7 +21,7 @@ class MCPTool:
     """Represents a tool that LLMs can use"""
     name: str
     description: str
-    function: callable
+    function: Callable[..., Any] | AsyncCallable
     parameters: Dict[str, Any]
 
 class MCPProvider(ABC):
@@ -31,7 +36,7 @@ class MCPProvider(ABC):
 
 class MCPManager:
     """Manages MCP resources and tools"""
-    def __init__(self):
+    def __init__(self) -> None:
         self.providers: List[MCPProvider] = []
         self.resources: Dict[str, MCPResource] = {}
         self.tools: Dict[str, MCPTool] = {}
@@ -56,12 +61,14 @@ class MCPManager:
         """Get a specific resource by name"""
         return self.resources.get(name)
     
-    async def use_tool(self, name: str, **kwargs) -> Any:
+    async def use_tool(self, name: str, **kwargs: Any) -> Any:
         """Use a specific tool with given parameters"""
         tool = self.tools.get(name)
         if tool is None:
             raise ValueError(f"Tool {name} not found")
-        return await tool.function(**kwargs)
+        if asyncio.iscoroutinefunction(tool.function):
+            return await tool.function(**kwargs)
+        return tool.function(**kwargs)
 
 class FileSystemProvider(MCPProvider):
     """Provides file system access via MCP"""
@@ -100,47 +107,18 @@ class FileSystemProvider(MCPProvider):
         with open(path, 'w') as f:
             f.write(content)
 
-# Update the Agent class to use MCP
 class MCPEnabledAgent:
     """Mixin to add MCP capabilities to agents"""
-    def __init__(self, mcp_manager: MCPManager):
+    def __init__(self, mcp_manager: MCPManager) -> None:
         self.mcp = mcp_manager
     
     async def get_context(self, query: str) -> List[MCPResource]:
         """Get relevant resources for a given query"""
-        # In a real implementation, this would use semantic search
         return [
             resource for resource in self.mcp.resources.values()
             if query.lower() in str(resource.content).lower()
         ]
     
-    async def use_tool(self, name: str, **kwargs) -> Any:
+    async def use_tool(self, name: str, **kwargs: Any) -> Any:
         """Use an MCP tool"""
         return await self.mcp.use_tool(name, **kwargs)
-
-# Example integration with our existing Orchestrator
-class EnhancedOrchestrator:
-    def __init__(self, api_key: str):
-        self.mcp_manager = MCPManager()
-        self.mcp_manager.register_provider(FileSystemProvider())
-        
-    async def initialize(self):
-        """Initialize MCP and other components"""
-        await self.mcp_manager.initialize()
-        
-    async def process_task(self, task: str) -> Any:
-        """Process a task with MCP capabilities"""
-        # Get relevant context
-        context = []
-        for worker in self.workers:
-            if isinstance(worker, MCPEnabledAgent):
-                resources = await worker.get_context(task)
-                context.extend(resources)
-        
-        # Enhanced processing with context
-        strategy = await self.strategist.process({
-            "task": task,
-            "context": context
-        })
-        
-        # ... rest of processing

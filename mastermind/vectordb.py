@@ -1,6 +1,7 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Sequence, Mapping, cast
 import chromadb
 from chromadb.config import Settings
+from chromadb.types import QueryResult
 import numpy as np
 from dataclasses import dataclass
 import asyncio
@@ -19,7 +20,7 @@ class VectorEntry:
 
 class VectorStore:
     """Manages vector storage and retrieval using ChromaDB"""
-    def __init__(self, persist_directory: str = "./vectorstore"):
+    def __init__(self, persist_directory: str = "./vectorstore") -> None:
         self.client = chromadb.PersistentClient(path=persist_directory)
         self.collection = self.client.create_collection(
             name="mastermind_memory",
@@ -56,12 +57,17 @@ class VectorStore:
                 where=filter_metadata
             )
             
-            entries = []
-            for i, doc in enumerate(results['documents'][0]):
+            entries: List[VectorEntry] = []
+            docs: Sequence[str] = results.get('documents', [[]])[0]
+            ids: Sequence[str] = results.get('ids', [[]])[0]
+            metadatas: Sequence[Mapping[str, Any]] = results.get('metadatas', [[]])[0]
+            
+            for i, (doc, id_str) in enumerate(zip(docs, ids)):
+                metadata = dict(metadatas[i])
                 entry = VectorEntry(
-                    id=results['ids'][0][i],
+                    id=id_str,
                     content=doc,
-                    metadata=results['metadatas'][0][i]
+                    metadata=metadata
                 )
                 entries.append(entry)
             
@@ -97,11 +103,12 @@ class VectorStore:
         try:
             self.logger.debug(f"Fetching entry: {entry_id}")
             result = self.collection.get(ids=[entry_id])
-            if result['ids']:
+            if result.get('ids', []) and len(result['ids']) > 0:
+                metadata = dict(result['metadatas'][0])
                 return VectorEntry(
                     id=result['ids'][0],
                     content=result['documents'][0],
-                    metadata=result['metadatas'][0]
+                    metadata=metadata
                 )
             return None
         except Exception as e:
@@ -110,7 +117,7 @@ class VectorStore:
 
 class EnhancedMemoryManager:
     """Manages memory using vector storage for improved retrieval"""
-    def __init__(self, persist_directory: str = "./vectorstore"):
+    def __init__(self, persist_directory: str = "./vectorstore") -> None:
         self.vector_store = VectorStore(persist_directory)
         self.logger = logging.getLogger(f"{__name__}.EnhancedMemoryManager")
 
@@ -150,7 +157,7 @@ class EnhancedMemoryManager:
     ) -> List[VectorEntry]:
         """Retrieve relevant memories using vector similarity"""
         try:
-            filter_metadata = {}
+            filter_metadata: Dict[str, Any] = {}
             if category:
                 filter_metadata["category"] = category
             if min_importance > 0:
@@ -182,9 +189,5 @@ class EnhancedMemoryManager:
         min_importance: float = 0.8
     ) -> None:
         """Clean up old memories based on age and importance"""
-        try:
-            # Implementation needed
-            pass
-        except Exception as e:
-            self.logger.error(f"Error cleaning up memories: {str(e)}")
-            raise
+        # Implementation needed
+        pass
