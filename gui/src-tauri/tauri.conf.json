@@ -1,9 +1,10 @@
 {
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run start",
     "devPath": "http://localhost:3000",
-    "distDir": "../build"
+    "distDir": "../dist"
   },
   "package": {
     "productName": "MasterMind",
@@ -12,16 +13,23 @@
   "tauri": {
     "allowlist": {
       "all": false,
-      "shell": {
-        "all": false,
-        "open": true
-      },
-      "dialog": {
-        "all": true
-      },
       "fs": {
         "all": true,
-        "scope": ["$APPDATA/**", "$APPDATA/"]
+        "scope": ["$APPDIR/**", "$APPDATA/**"]
+      },
+      "path": {
+        "all": true
+      },
+      "window": {
+        "all": false,
+        "close": true,
+        "hide": true,
+        "show": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
       }
     },
     "bundle": {
@@ -40,7 +48,7 @@
         "icons/icon.ico"
       ],
       "identifier": "com.t4ai.mastermind",
-      "longDescription": "Advanced multi-agent LLM system with memory capabilities",
+      "longDescription": "",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
@@ -49,7 +57,7 @@
         "signingIdentity": null
       },
       "resources": [],
-      "shortDescription": "MasterMind AI Assistant",
+      "shortDescription": "",
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,
@@ -70,7 +78,8 @@
         "resizable": true,
         "title": "MasterMind",
         "width": 1200,
-        "decorations": true
+        "transparent": true,
+        "decorations": false
       }
     ]
   }
