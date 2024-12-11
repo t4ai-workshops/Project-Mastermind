@@ -1,10 +1,16 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { Layout } from './components/Layout'
-import './index.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { Layout } from './components/Layout';
+import './index.css';
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+// Initialize React root
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Root element not found in document');
+}
+
+ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Layout />
-  </React.StrictMode>,
-)
+  </React.StrictMode>
+);

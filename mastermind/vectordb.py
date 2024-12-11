@@ -59,11 +59,11 @@ class VectorStore:
             entries: List[VectorEntry] = []
             
             # Safely handle potentially None values
-            documents = results.get('documents')
-            ids = results.get('ids')
-            metadatas = results.get('metadatas')
+            documents = results.get('documents', [[]])
+            ids = results.get('ids', [[]])
+            metadatas = results.get('metadatas', [[]])
             
-            if documents and ids and metadatas and len(documents) > 0:
+            if documents and len(documents) > 0 and ids and len(ids) > 0 and metadatas and len(metadatas) > 0:
                 docs = documents[0]
                 id_list = ids[0]
                 meta_list = metadatas[0]
@@ -110,11 +110,16 @@ class VectorStore:
         try:
             self.logger.debug(f"Fetching entry: {entry_id}")
             result = self.collection.get(ids=[entry_id])
-            if result.get('ids', []) and len(result['ids']) > 0:
-                metadata = dict(result['metadatas'][0])
+            
+            metadatas = result.get('metadatas', [])
+            ids = result.get('ids', [])
+            documents = result.get('documents', [])
+            
+            if metadatas and ids and documents and len(ids) > 0:
+                metadata = dict(metadatas[0])
                 return VectorEntry(
-                    id=result['ids'][0],
-                    content=result['documents'][0],
+                    id=ids[0],
+                    content=documents[0],
                     metadata=metadata
                 )
             return None
