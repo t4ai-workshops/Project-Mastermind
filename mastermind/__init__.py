@@ -6,13 +6,45 @@ from mastermind.core import (
     StrategistAgent,
     TaskResult,
     ModelType,
+    Agent
+)
+
+from mastermind.mcp import (
+    MCPManager,
+    MCPProvider,
+    MCPResource,
+    MCPTool,
+    MCPEnabledAgent,
+    FileSystemProvider
+)
+
+from mastermind.vectordb import (
+    VectorEntry,
+    VectorStore,
+    EnhancedMemoryManager
 )
 
 __version__ = '0.1.0'
+
 __all__ = [
+    # Core components
     'Orchestrator',
     'WorkerAgent',
     'StrategistAgent',
     'TaskResult',
     'ModelType',
+    'Agent',
+    
+    # MCP components
+    'MCPManager',
+    'MCPProvider',
+    'MCPResource',
+    'MCPTool',
+    'MCPEnabledAgent',
+    'FileSystemProvider',
+    
+    # Vector database components
+    'VectorEntry',
+    'VectorStore',
+    'EnhancedMemoryManager'
 ]

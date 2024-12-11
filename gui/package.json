@@ -2,9 +2,10 @@
   "name": "mastermind-gui",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@tauri-apps/api": "^1.5.0",
-    "@types/node": "^16.18.0",
+    "@types/node": "^18.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "lucide-react": "^0.263.1",
@@ -17,11 +18,14 @@
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.0",
     "@types/jest": "^27.5.2",
+    "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.16",
-    "postcss": "^8.4.31"
+    "postcss": "^8.4.31",
+    "vite": "^4.5.0"
   },
   "scripts": {
     "start": "vite",
+    "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri"

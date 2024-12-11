@@ -46,7 +46,9 @@ class Agent(ABC):
             ))
             message = cast(Message, response)
             self.logger.debug(f"Received response from {self.model.value}")
-            return str(message.content)
+            if hasattr(response, 'content'):
+                return str(response.content)
+            return str(response)
         except Exception as e:
             self.logger.error(f"Error in think method: {str(e)}")
             raise
@@ -78,7 +80,7 @@ class StrategistAgent(Agent):
             prompt = f"""
             Task Analysis Required:
             {task}
-
+            
             Please provide:
             1. Task decomposition
             2. Strategic approach
@@ -135,14 +137,3 @@ class Orchestrator:
 
         self.logger.info("Task processing completed")
         return final_analysis
-
-
-# Make sure to list all public exports
-__all__ = [
-    'ModelType',
-    'TaskResult',
-    'Agent',
-    'WorkerAgent',
-    'StrategistAgent',
-    'Orchestrator'
-]
