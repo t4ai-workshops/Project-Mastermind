@@ -10,6 +10,13 @@ use cocoa::base::{id, nil, YES};
 use objc::{msg_send, sel, sel_impl};
 use dotenv::dotenv;
 use std::env;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize)]
+struct MessageResponse {
+    content: String,
+    memories: Vec<String>,
+}
 
 // This command is specific to macOS
 #[tauri::command]
@@ -41,6 +48,35 @@ fn toggle_titlebar<R: Runtime>(window: tauri::Window<R>, show: bool) {
 fn get_api_key() -> String {
     env::var("ANTHROPIC_API_KEY")
         .expect("ANTHROPIC_API_KEY must be set in .env file")
+}
+
+#[tauri::command]
+async fn process_message(api_key: String, message: String, context: String, model: String) -> Result<MessageResponse, String> {
+    // Proxy het verzoek naar de Python backend
+    let client = reqwest::Client::new();
+    let response = client
+        .post("http://localhost:8000/process_message")
+        .json(&serde_json::json!({
+            "apiKey": api_key,
+            "message": message,
+            "context": context,
+            "model": model
+        }))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    if !response.status().is_success() {
+        let error_text = response.text().await.unwrap_or_default();
+        return Err(format!("API Error: {}", error_text));
+    }
+
+    let result = response
+        .json::<MessageResponse>()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(result)
 }
 
 fn main() {
@@ -80,7 +116,7 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![toggle_fullscreen, toggle_titlebar, get_api_key])
+        .invoke_handler(tauri::generate_handler![toggle_fullscreen, toggle_titlebar, get_api_key, process_message])
         .run(context)
         .expect("error while running tauri application");
 }

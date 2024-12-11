@@ -26,7 +26,7 @@ const safeTauriInvoke = async (cmd: string, args: any) => {
     }
   } catch (tauriError) {
     console.error('Tauri invoke failed:', tauriError);
-    throw tauriError;
+    throw new Error(`Tauri Error: ${tauriError}`);
   }
 
   // Fallback to HTTP request
@@ -35,12 +35,15 @@ const safeTauriInvoke = async (cmd: string, args: any) => {
     return response.data;
   } catch (httpError) {
     console.error('HTTP fallback failed:', httpError);
+    if (axios.isAxiosError(httpError) && httpError.response) {
+      throw new Error(`API Error: ${httpError.response.data.detail || httpError.message}`);
+    }
     throw httpError;
   }
 };
 
-// Define more precise types
-type ModelStrategist = 'claude-3-sonnet' | 'claude-3-opus';
+// Define more precise types with base model names (versioning handled by backend)
+type ModelStrategist = 'claude-3-opus' | 'claude-3-sonnet';
 type ModelWorker = 'claude-3-haiku' | 'claude-3-sonnet';
 type Theme = 'light' | 'dark';
 
@@ -64,6 +67,7 @@ export interface ChatMessage {
     processingTime?: number;
   };
   files?: File[];
+  error?: string;  // New field for error messages
 }
 
 export interface Chat {
@@ -111,7 +115,7 @@ interface AppState {
   processMessage: (chatId: string, message: ChatMessage) => Promise<void>;
 }
 
-// Safe default settings
+// Safe default settings with base model names
 const defaultSettings: Settings = {
   apiKey: '',
   theme: 'light',
@@ -246,7 +250,21 @@ export const useStore = create<AppState>()(
           }
         } catch (error) {
           console.error('Error processing message:', error);
+          
+          // Add error message to chat
+          const errorMessage: ChatMessage = {
+            id: Math.random().toString(36).substr(2, 9),
+            role: 'assistant',
+            content: 'Sorry, er is een fout opgetreden bij het verwerken van je bericht.',
+            timestamp: Date.now(),
+            error: error instanceof Error ? error.message : 'Unknown error'
+          };
+
           set((state) => {
+            const chat = state.chats.find(c => c.id === chatId);
+            if (chat) {
+              chat.messages.push(errorMessage);
+            }
             state.isProcessing = false;
           });
         }

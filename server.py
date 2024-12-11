@@ -1,41 +1,43 @@
 import os
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 import anthropic
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Literal, Optional, List
+from typing import Literal
 import logging
 import uvicorn
 
 # Configure logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
 
 # Initialize FastAPI app
-app = FastAPI(
-    title="Mastermind AI API",
-    description="API for Mastermind AI Assistant using Anthropic's Claude models",
-    version="0.1.0"
-)
+app = FastAPI(title="Mastermind AI API")
 
 # CORS configuration
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins if allowed_origins != [""] else ["*"],
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
-# Request/Response Models
+# Initialize Anthropic client
+client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+
+# Valid model identifiers
+MODELS = {
+    "claude-3-haiku": "claude-3-haiku-20240307",
+    "claude-3-sonnet": "claude-3-sonnet-20240229",  # Full version required
+    "claude-3-opus": "claude-3-opus-20240229"  # Full version required
+}
+
+# Request models
 class ChatRequest(BaseModel):
     message: str
     context: str = ""
@@ -43,104 +45,78 @@ class ChatRequest(BaseModel):
 class CodeGenerationRequest(BaseModel):
     prompt: str
     language: str = "python"
-    context: Optional[str] = None
 
 class MessageRequest(BaseModel):
     apiKey: str = Field(default="")
     message: str
     context: str = ""
-    model: Literal["claude-3-sonnet", "claude-3-opus", "claude-3-haiku"] = "claude-3-sonnet"
+    model: Literal["claude-3-haiku", "claude-3-sonnet", "claude-3-opus"] = "claude-3-sonnet"
 
-class Memory(BaseModel):
-    content: str
-    category: str
-    importance: float
-
-class ProcessResponse(BaseModel):
-    content: str
-    memories: List[Memory] = []
-
-# Dependency for Anthropic client
-def get_anthropic_client(api_key: Optional[str] = None):
-    client_api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
-    if not client_api_key:
-        raise HTTPException(
-            status_code=401,
-            detail="No API key provided. Set ANTHROPIC_API_KEY in environment or provide in request."
-        )
-    return anthropic.Anthropic(api_key=client_api_key)
-
-@app.post("/chat", response_model=ProcessResponse)
-async def chat_endpoint(
-    request: ChatRequest,
-    client: anthropic.Anthropic = Depends(get_anthropic_client)
-):
+# Chat Endpoint
+@app.post("/chat")
+async def chat_endpoint(request: ChatRequest):
     try:
         logger.debug(f"Received chat request: {request}")
         response = client.messages.create(
-            model="claude-3-opus-20240229",
+            model=MODELS["claude-3-opus"],
             max_tokens=1000,
             messages=[
                 {"role": "user", "content": request.message}
             ]
         )
         logger.debug("Chat processed successfully")
-        return ProcessResponse(
-            content=response.content[0].text,
-            memories=[]
-        )
-    except anthropic.APIError as e:
-        logger.error(f"Anthropic API Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"response": response.content[0].text}
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/generate-code", response_model=ProcessResponse)
-async def generate_code_endpoint(
-    request: CodeGenerationRequest,
-    client: anthropic.Anthropic = Depends(get_anthropic_client)
-):
+# Code Generation Endpoint
+@app.post("/generate-code")
+async def generate_code_endpoint(request: CodeGenerationRequest):
     try:
         logger.debug(f"Received code generation request: {request}")
-        
-        # Build prompt with context if provided
-        prompt = f"Generate a code snippet in {request.language} for the following task: {request.prompt}"
-        if request.context:
-            prompt = f"Context:\n{request.context}\n\n{prompt}"
-        
         response = client.messages.create(
-            model="claude-3-opus-20240229",
+            model=MODELS["claude-3-opus"],
             max_tokens=1000,
             messages=[
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": f"Generate a code snippet in {request.language} for the following task: {request.prompt}"}
             ]
         )
         logger.debug("Code generation processed successfully")
-        return ProcessResponse(
-            content=response.content[0].text,
-            memories=[]
-        )
-    except anthropic.APIError as e:
-        logger.error(f"Anthropic API Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"code": response.content[0].text}
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/process_message", response_model=ProcessResponse)
+# Process Message Endpoint
+@app.post("/process_message")
 async def process_message(request: MessageRequest):
     try:
-        logger.debug(f"Received message request for model: {request.model}")
+        logger.debug(f"Received message request: {request}")
+
+        # Use API key from request or environment
+        api_key = request.apiKey or os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            logger.error("No API key provided")
+            raise HTTPException(status_code=401, detail="No API key provided")
+
+        # Log API key (without revealing full key)
+        logger.debug(f"Using API key ending with: {api_key[-5:]}")
+
+        client = anthropic.Anthropic(api_key=api_key)
         
-        # Get client using provided or environment API key
-        client = get_anthropic_client(request.apiKey)
-        
-        # Combine context and message if context provided
+        # Combine context and message
         full_context = request.context + "\n\n" + request.message if request.context else request.message
         
+        # Get model string
+        model_version = MODELS.get(request.model)
+        if not model_version:
+            raise HTTPException(status_code=400, detail=f"Invalid model: {request.model}")
+        
+        logger.debug(f"Sending message to model: {model_version}")
+        
         response = client.messages.create(
-            model=request.model,
+            model=model_version,
             max_tokens=1000,
             messages=[
                 {
@@ -152,38 +128,22 @@ async def process_message(request: MessageRequest):
         
         logger.debug("Message processed successfully")
         
-        return ProcessResponse(
-            content=response.content[0].text,
-            memories=[]  # Placeholder for future memory generation
-        )
+        return {
+            "content": response.content[0].text,
+            "memories": []  # Placeholder for future memory generation
+        }
     except anthropic.APIError as e:
         logger.error(f"Anthropic API Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Anthropic API Error: {str(e)}")
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
+# Health Check
 @app.get("/health")
 async def health_check():
-    """Health check endpoint that also verifies API key configuration"""
-    try:
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        return {
-            "status": "healthy",
-            "api_configured": bool(api_key)
-        }
-    except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        raise HTTPException(status_code=500, detail="Health check failed")
+    logger.debug("Health check request received")
+    return {"status": "healthy"}
 
 if __name__ == "__main__":
-    host = os.getenv("HOST", "0.0.0.0")
-    port = int(os.getenv("PORT", "8000"))
-    debug = os.getenv("DEBUG", "True").lower() == "true"
-    
-    uvicorn.run(
-        app,
-        host=host,
-        port=port,
-        log_level="debug" if debug else "info"
-    )
+    uvicorn.run(app, host="0.0.0.0", port=8000)
