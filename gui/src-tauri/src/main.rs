@@ -5,13 +5,18 @@
 
 use tauri::{Manager, Runtime};
 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+use cocoa::appkit::{NSWindowTitleVisibility, NSWindowStyleMask};
+use cocoa::base::{id, nil, YES};
+use objc::{msg_send, sel, sel_impl};
+use dotenv::dotenv;
+use std::env;
 
 // This command is specific to macOS
 #[tauri::command]
 fn toggle_fullscreen<R: Runtime>(window: tauri::Window<R>) {
-    if let Some(ns_window) = window.ns_window() {
+    if let Ok(ns_window) = window.ns_window() {
         unsafe {
-            ns_window.toggleFullScreen_(None);
+            let _: () = msg_send![ns_window as id, toggleFullScreen: nil];
         }
     }
 }
@@ -19,20 +24,33 @@ fn toggle_fullscreen<R: Runtime>(window: tauri::Window<R>) {
 // This command handles the window titlebar on macOS
 #[tauri::command]
 fn toggle_titlebar<R: Runtime>(window: tauri::Window<R>, show: bool) {
-    if let Some(ns_window) = window.ns_window() {
+    if let Ok(ns_window) = window.ns_window() {
         unsafe {
             if show {
-                ns_window.setTitlebarAppearsTransparent_(cocoa::base::YES);
-                ns_window.setTitleVisibility_(cocoa::appkit::NSWindowTitleVisibility::NSWindowTitleVisible);
+                let _: () = msg_send![ns_window as id, setTitlebarAppearsTransparent: YES];
+                let _: () = msg_send![ns_window as id, setTitleVisibility: NSWindowTitleVisibility::NSWindowTitleVisible];
             } else {
-                ns_window.setTitlebarAppearsTransparent_(cocoa::base::YES);
-                ns_window.setTitleVisibility_(cocoa::appkit::NSWindowTitleVisibility::NSWindowTitleHidden);
+                let _: () = msg_send![ns_window as id, setTitlebarAppearsTransparent: YES];
+                let _: () = msg_send![ns_window as id, setTitleVisibility: NSWindowTitleVisibility::NSWindowTitleHidden];
             }
         }
     }
 }
 
+#[tauri::command]
+fn get_api_key() -> String {
+    env::var("ANTHROPIC_API_KEY")
+        .expect("ANTHROPIC_API_KEY must be set in .env file")
+}
+
 fn main() {
+    // Load .env file
+    dotenv().ok();
+
+    // Retrieve the API key
+    let api_key = env::var("ANTHROPIC_API_KEY")
+        .expect("ANTHROPIC_API_KEY must be set");
+
     let context = tauri::generate_context!();
     tauri::Builder::default()
         .setup(|app| {
@@ -45,16 +63,13 @@ fn main() {
                     .expect("Failed to add vibrancy effect");
 
                 // Configure window for macOS
-                if let Some(ns_window) = window.ns_window() {
+                if let Ok(ns_window) = window.ns_window() {
                     unsafe {
-                        use cocoa::appkit::{NSWindow, NSWindowStyleMask};
-                        ns_window.setTitlebarAppearsTransparent_(cocoa::base::YES);
-                        let style_mask = ns_window.styleMask();
-                        ns_window.setStyleMask_(
-                            style_mask | NSWindowStyleMask::NSFullSizeContentViewWindowMask
-                        );
-                        // Enable window to remember size and position
-                        ns_window.setRestorable_(cocoa::base::YES);
+                        let _: () = msg_send![ns_window as id, setTitlebarAppearsTransparent: YES];
+                        let style_mask: NSWindowStyleMask = msg_send![ns_window as id, styleMask];
+                        let new_style_mask = style_mask | NSWindowStyleMask::NSFullSizeContentViewWindowMask;
+                        let _: () = msg_send![ns_window as id, setStyleMask: new_style_mask];
+                        let _: () = msg_send![ns_window as id, setRestorable: YES];
                     }
                 }
             }
@@ -65,7 +80,7 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![toggle_fullscreen, toggle_titlebar])
+        .invoke_handler(tauri::generate_handler![toggle_fullscreen, toggle_titlebar, get_api_key])
         .run(context)
         .expect("error while running tauri application");
 }

@@ -1,3 +1,23 @@
+# Core dependencies
 anthropic>=0.8.0
-asyncio>=3.4.3
+fastapi>=0.109.0
+uvicorn>=0.27.0
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+
+# Database
+chromadb>=0.5.23
+
+# Testing
+pytest>=7.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+pytest-mock>=3.12.0
+
+# Code quality
+mypy>=1.8.0
+flake8>=7.0.0
+
+# Type support
 typing-extensions>=4.7.1
+asyncio>=3.4.3
