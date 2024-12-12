@@ -1,0 +1,90 @@
+/**
+ * Mastermind AI - Global Styles
+ * 
+ * This file contains all global styles and Tailwind configurations.
+ * Structure:
+ * 1. Tailwind directives
+ * 2. Root variables
+ * 3. Global defaults
+ * 4. Utility classes
+ * 5. Platform-specific styles
+ * 6. Dark mode adjustments
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Root variables and defaults */
+:root {
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Global layout defaults */
+body, 
+html, 
+#root {
+  overflow: hidden;
+  height: 100vh;
+  max-height: 100vh;
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Scrollbar styling */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scroll-behavior: smooth;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-600;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-500;
+  }
+}
+
+/* Scroll container - used for chat area */
+.scroll-container {
+  @apply overflow-y-auto overscroll-behavior-y-contain custom-scrollbar;
+}
+
+/* Message container defaults */
+.message-container {
+  @apply max-w-[70%] p-3 rounded-lg;
+}
+
+/* Native macOS vibrancy support */
+@supports (-webkit-backdrop-filter: none) {
+  .sidebar-blur {
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+}
+
+/* Dark mode adjustments */
+.dark {
+  color-scheme: dark;
+}
+
+/* Titlebar drag region for desktop app */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+}

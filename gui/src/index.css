@@ -11,10 +11,22 @@
   -webkit-text-size-adjust: 100%;
 }
 
-html, body, #root {
+body, html, #root {
+  overflow: hidden;
   height: 100vh;
-  margin: 0;
-  padding: 0;
+  max-height: 100vh;
+}
+
+/* Scrollbar verbeteringen */
+* {
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+/* Extra scroll container styling */
+.scroll-container {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 /* Custom scrollbar for webkit browsers */
