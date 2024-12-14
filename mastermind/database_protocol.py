@@ -1,4 +1,4 @@
-from typing import Protocol, List, Dict, Any, Optional
+from typing import Protocol, List, Dict, Any, Optional, field
 from dataclasses import dataclass, asdict
 from datetime import datetime
 import uuid
@@ -9,9 +9,9 @@ class DatabaseEntry:
     id: str = str(uuid.uuid4())
     created_at: datetime = datetime.now()
     updated_at: datetime = datetime.now()
-    metadata: Dict[str, Any] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def __init__(self, metadata: dict):
+    def __init__(self, metadata: Dict[str, Any]):
         self.metadata = metadata
 
     def to_dict(self) -> Dict[str, Any]:

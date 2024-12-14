@@ -44,7 +44,7 @@ class MCPManager:
         self.knowledge_cluster = knowledge_cluster
         self.resources: Dict[str, Any] = {}  # Voeg een type-annotatie toe
     
-    def use_tool(self, tool_name: str, *args, **kwargs) -> Any:
+    def use_tool(self, tool_name: str, *args: Any, **kwargs: Any) -> Any:
         """
         Gebruik een specifiek hulpmiddel binnen MCP
         
