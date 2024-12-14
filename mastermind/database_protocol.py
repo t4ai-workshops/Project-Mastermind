@@ -62,3 +62,5 @@ class BaseDatabaseManager:
         """Generieke ophaal methode"""
         result = await self.db.read(entry_id)
         return result.metadata if result else None 
+
+metadata: Dict[str, Any] = {}

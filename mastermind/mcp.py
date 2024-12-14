@@ -42,7 +42,7 @@ class MCPManager:
     
     def __init__(self, knowledge_cluster: KnowledgeCluster):
         self.knowledge_cluster = knowledge_cluster
-        self.resources = {}  # Voeg een lege dictionary toe voor resources
+        self.resources: Dict[str, Any] = {}  # Voeg een type-annotatie toe
     
     def use_tool(self, tool_name: str, *args, **kwargs) -> Any:
         """

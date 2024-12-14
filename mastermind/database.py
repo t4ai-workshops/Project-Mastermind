@@ -39,3 +39,18 @@ def delete_memory(memory_id):
     if memory:
         session.delete(memory)
         session.commit()
+
+def create_memory(content: str, category: str, importance: float) -> Memory:
+    return Memory(content=content, category=category, importance=importance)
+
+def get_memory_by_id(memory_id: int) -> Optional[Memory]:
+    # Implementatie om een geheugen op te halen
+    ...
+
+def update_memory_importance(memory_id: int, new_importance: float) -> bool:
+    # Implementatie om het belang van een geheugen te updaten
+    ...
+
+def delete_memory(memory_id: int) -> bool:
+    # Implementatie om een geheugen te verwijderen
+    ...

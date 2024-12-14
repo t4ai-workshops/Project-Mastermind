@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Awaitable
 from datetime import datetime, timedelta
 import logging
 
@@ -42,7 +42,10 @@ class KnowledgeCluster:
         :param text: Invoer tekst
         :return: Embedding vector
         """
-        return self.embedding_model.encode(text).tolist()
+        embedding = self.embedding_model.encode(text)
+        if isinstance(embedding, list):
+            return embedding
+        return embedding.tolist()
     
     async def store_knowledge(
         self, 
@@ -139,10 +142,7 @@ class KnowledgeCluster:
         """
         Ruim oude en minder belangrijke herinneringen op
         """
-        # Korte termijn geheugen: verwijder items ouder dan ingestelde uren
         await self.short_term_db.cleanup_vectors(min_importance=0.2)
-        
-        # Lange termijn geheugen: verwijder zeer oude of irrelevante items
         await self.long_term_db.cleanup_vectors(min_importance=0.5)
     
     async def update_knowledge_importance(
@@ -170,4 +170,5 @@ class KnowledgeCluster:
             self.logger.error(f"Ongeldig geheugentype: {memory_type}")
             return False
         
-        return await selected_db.update_importance(entry_id, new_importance) 
+        result = await selected_db.update_importance(entry_id, new_importance)
+        return bool(result)
