@@ -4,7 +4,7 @@ import logging
 import asyncio
 
 from .vectordb import VectorDatabase, VectorEntry
-from sentence_transformers import SentenceTransformer # type: ignore
+from sentence_transformers import SentenceTransformer
 
 class KnowledgeCluster:
     """Gelaagd kennisopslagsysteem"""
@@ -141,15 +141,15 @@ class KnowledgeCluster:
         """Ruim oude en minder belangrijke herinneringen op"""
         cleanup_tasks = []
         if self.short_term_db:
-            task: asyncio.Task[List[int]] = asyncio.create_task(
+            short_term_task: asyncio.Task[List[int]] = asyncio.create_task(
                 self.short_term_db.cleanup_vectors(min_importance=0.2)
             )
-            cleanup_tasks.append(task)
+            cleanup_tasks.append(short_term_task)
         if self.long_term_db:
-            task: asyncio.Task[List[int]] = asyncio.create_task(
+            long_term_task: asyncio.Task[List[int]] = asyncio.create_task(
                 self.long_term_db.cleanup_vectors(min_importance=0.5)
             )
-            cleanup_tasks.append(task)
+            cleanup_tasks.append(long_term_task)
         if cleanup_tasks:
             await asyncio.gather(*cleanup_tasks)
     
