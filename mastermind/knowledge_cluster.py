@@ -139,19 +139,24 @@ class KnowledgeCluster:
     
     async def cleanup_memories(self) -> None:
         """Ruim oude en minder belangrijke herinneringen op"""
-        cleanup_tasks = []
+        tasks: List[asyncio.Task[List[int]]] = []
+        
         if self.short_term_db:
-            short_term_task: asyncio.Task[List[int]] = asyncio.create_task(
-                self.short_term_db.cleanup_vectors(min_importance=0.2)
+            tasks.append(
+                asyncio.create_task(
+                    self.short_term_db.cleanup_vectors(min_importance=0.2)
+                )
             )
-            cleanup_tasks.append(short_term_task)
+        
         if self.long_term_db:
-            long_term_task: asyncio.Task[List[int]] = asyncio.create_task(
-                self.long_term_db.cleanup_vectors(min_importance=0.5)
+            tasks.append(
+                asyncio.create_task(
+                    self.long_term_db.cleanup_vectors(min_importance=0.5)
+                )
             )
-            cleanup_tasks.append(long_term_task)
-        if cleanup_tasks:
-            await asyncio.gather(*cleanup_tasks)
+        
+        if tasks:
+            await asyncio.gather(*tasks)
     
     async def update_knowledge_importance(
         self, 
