@@ -1,4 +1,4 @@
-from typing import List, Dict, Any, Optional, Awaitable
+from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
 import logging
 
