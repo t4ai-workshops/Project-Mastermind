@@ -82,15 +82,3 @@ class VectorDatabase:
             self.session.delete(memory)
         self.session.commit()
         return deleted_ids
-
-class VectorStore:
-    """Beheer van vectoropslag en -retrieval"""
-    def __init__(self):
-        pass
-    # Voeg hier de benodigde methoden en attributen toe
-
-class EnhancedMemoryManager:
-    """Extra functionaliteiten voor geheugenbeheer"""
-    def __init__(self):
-        pass
-    # Voeg hier de benodigde methoden en attributen toe

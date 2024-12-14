@@ -35,17 +35,15 @@ class KnowledgeCluster:
         self.short_term_retention = short_term_retention_hours
         self.long_term_retention = long_term_retention_days
     
-    def _generate_embedding(self, text: str) -> List[float]:
+    async def get_vector_embedding(self, text: str) -> List[float]:
         """
         Genereer vector embedding voor tekst
         
         :param text: Invoer tekst
         :return: Embedding vector
         """
-        embedding = self.embedding_model.encode(text)
-        if isinstance(embedding, list):
-            return embedding
-        return embedding.tolist()
+        embedding = await self.embedding_model.encode(text)
+        return [float(x) for x in embedding]
     
     async def store_knowledge(
         self, 
@@ -63,7 +61,7 @@ class KnowledgeCluster:
         :param is_context_specific: Of het context-specifiek is
         :return: Entry ID
         """
-        embedding = self._generate_embedding(content)
+        embedding = await self.get_vector_embedding(content)
         
         if is_context_specific:
             return self.context_db.store_vector(
@@ -107,7 +105,7 @@ class KnowledgeCluster:
         :param min_importance: Minimale belang score
         :return: Lijst van relevante kennisitems
         """
-        query_embedding = self._generate_embedding(query)
+        query_embedding = await self.get_vector_embedding(query)
         results: List[VectorEntry] = []
         
         if include_short_term:
@@ -172,3 +170,11 @@ class KnowledgeCluster:
         
         result = await selected_db.update_importance(entry_id, new_importance)
         return bool(result)
+    
+    async def process_cluster(self, cluster_ids: List[int]) -> Any:
+        result = await self.async_process_cluster(cluster_ids)
+        return result
+    
+    async def verify_cluster(self, cluster_id: int) -> bool:
+        result = await self.async_verify_cluster(cluster_id)
+        return result

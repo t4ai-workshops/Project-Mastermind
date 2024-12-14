@@ -19,9 +19,8 @@ from mastermind.mcp import (
 )
 
 from mastermind.vectordb import (
-    VectorEntry,
-    VectorStore,
-    EnhancedMemoryManager
+    VectorDatabase,
+    VectorEntry
 )
 
 __version__ = '0.1.0'
@@ -44,7 +43,6 @@ __all__ = [
     'FileSystemProvider',
     
     # Vector database components
-    'VectorEntry',
-    'VectorStore',
-    'EnhancedMemoryManager'
+    'VectorDatabase',
+    'VectorEntry'
 ]
