@@ -1,15 +1,13 @@
 from typing import List, Optional, Any, Type
-from sqlalchemy import create_engine, Column, Integer, String, Float
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from typing import List, Any
-from datetime import datetime
+from sqlalchemy import create_engine, Column, Integer, String, Float # type: ignore
+from sqlalchemy.ext.declarative import declarative_base # type: ignore
+from sqlalchemy.orm import sessionmaker, Session, DeclarativeMeta # type: ignore
 
 PERSIST_DIRECTORY = "./chroma_db"
 
-BaseType = declarative_base()
+Base: DeclarativeMeta = declarative_base()
 
-class Memory(BaseType):
+class Memory(Base):
     __tablename__ = 'memories'
     id = Column(Integer, primary_key=True)
     content = Column(String)
@@ -18,7 +16,7 @@ class Memory(BaseType):
 
 # Setup de SQLite database
 engine = create_engine('sqlite:///memories.db')
-BaseType.metadata.create_all(engine)
+Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 

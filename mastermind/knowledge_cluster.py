@@ -141,10 +141,13 @@ class KnowledgeCluster:
         """Ruim oude en minder belangrijke herinneringen op"""
         cleanup_tasks = []
         if self.short_term_db:
-            cleanup_tasks.append(self.short_term_db.cleanup_vectors(min_importance=0.2))
+            task = asyncio.create_task(self.short_term_db.cleanup_vectors(min_importance=0.2))
+            cleanup_tasks.append(task)
         if self.long_term_db:
-            cleanup_tasks.append(self.long_term_db.cleanup_vectors(min_importance=0.5))
-        await asyncio.gather(*cleanup_tasks)
+            task = asyncio.create_task(self.long_term_db.cleanup_vectors(min_importance=0.5))
+            cleanup_tasks.append(task)
+        if cleanup_tasks:
+            await asyncio.gather(*cleanup_tasks)
     
     async def update_knowledge_importance(
         self, 
@@ -171,8 +174,12 @@ class KnowledgeCluster:
             self.logger.error(f"Ongeldig geheugentype: {memory_type}")
             return False
         
-        result = await selected_db.update_importance(entry_id, new_importance)
-        return bool(result)
+        try:
+            result = selected_db.update_importance(entry_id, new_importance)
+            return result
+        except Exception as e:
+            self.logger.error(f"Error updating importance: {e}")
+            return False
     
     async def process_cluster(self, cluster_ids: List[int]) -> Any:
         """Process een cluster van geheugens"""
