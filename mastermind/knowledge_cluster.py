@@ -135,7 +135,7 @@ class KnowledgeCluster:
             reverse=True
         )[:max_results]
     
-    async def cleanup_memories(self):
+    async def cleanup_memories(self) -> None:
         """
         Ruim oude en minder belangrijke herinneringen op
         """
@@ -143,14 +143,11 @@ class KnowledgeCluster:
         await self.short_term_db.cleanup_vectors(min_importance=0.2)
         
         # Lange termijn geheugen: verwijder zeer oude of irrelevante items
-        await self.long_term_db.cleanup_vectors(
-            max_age_days=self.long_term_retention, 
-            min_importance=0.5
-        )
+        await self.long_term_db.cleanup_vectors(min_importance=0.5)
     
     async def update_knowledge_importance(
         self, 
-        entry_id: str, 
+        entry_id: int, 
         new_importance: float,
         memory_type: str = 'long_term'
     ) -> bool:

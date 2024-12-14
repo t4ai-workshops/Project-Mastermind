@@ -38,19 +38,25 @@ class MCPProvider(ABC):
         pass
 
 class MCPManager:
-    """Manages MCP resources and tools"""
-    def __init__(self, knowledge_cluster: KnowledgeCluster) -> None:
-        self.knowledge_cluster = knowledge_cluster
+    """Beheer van Multi-Context Processing (MCP)"""
     
-    async def retrieve_context(self, query: str, max_results: int = 5) -> str:
+    def __init__(self, knowledge_cluster: KnowledgeCluster):
+        self.knowledge_cluster = knowledge_cluster
+        self.resources = {}  # Voeg een lege dictionary toe voor resources
+    
+    def use_tool(self, tool_name: str, *args, **kwargs) -> Any:
         """
-        Haal relevante contextuele herinneringen op voor een gegeven query.
+        Gebruik een specifiek hulpmiddel binnen MCP
+        
+        :param tool_name: Naam van het hulpmiddel
+        :return: Resultaat van het hulpmiddel
         """
-        relevant_memories = await self.knowledge_cluster.retrieve_knowledge(query, max_results)
-        return "\n\n".join([
-            f"Relevante herinnering: {memory.metadata.get('content', '')}" 
-            for memory in relevant_memories
-        ])
+        # Implementeer logica om het hulpmiddel te gebruiken
+        if tool_name in self.resources:
+            tool = self.resources[tool_name]
+            return tool(*args, **kwargs)
+        else:
+            raise ValueError(f"Hulpmiddel {tool_name} niet gevonden")
 
 class FileSystemProvider(MCPProvider):
     """Provides file system access via MCP"""

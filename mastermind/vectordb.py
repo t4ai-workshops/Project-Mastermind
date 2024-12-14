@@ -28,7 +28,7 @@ class VectorEntry(DatabaseEntry):
 class VectorDatabase:
     """Gespecialiseerde vector database met extra functionaliteiten"""
     
-    def __init__(self, collection_name: str = None):
+    def __init__(self, collection_name: Optional[str] = None):
         # Setup de SQLite database verbinding
         self.session = session
         self.collection_name = collection_name
