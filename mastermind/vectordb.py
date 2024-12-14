@@ -15,7 +15,7 @@ class VectorEntry(DatabaseEntry):
         category: str = 'default',
         importance: float = 0.5,
         **kwargs
-    ) -> None:
+    ):
         metadata = {
             'content': content,
             'embedding': embedding,
@@ -94,11 +94,3 @@ class EnhancedMemoryManager:
     def __init__(self):
         pass
     # Voeg hier de benodigde methoden en attributen toe
-
-def my_function(param1: int, param2: str) -> None:
-    # Voeg type-annotaties toe
-    pass
-
-def another_function() -> None:
-    # Voeg een return type-annotatie toe
-    pass

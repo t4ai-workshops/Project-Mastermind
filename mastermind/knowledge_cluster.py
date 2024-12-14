@@ -170,13 +170,5 @@ class KnowledgeCluster:
             self.logger.error(f"Ongeldig geheugentype: {memory_type}")
             return False
         
-        result = selected_db.update_importance(entry_id, new_importance)
+        result = await selected_db.update_importance(entry_id, new_importance)
         return bool(result)
-    
-    async def some_async_function() -> List[float]:
-        # Zorg ervoor dat de return-waarde een lijst van floats is
-        return [0.0]
-    
-    # Zorg ervoor dat de functies die je await daadwerkelijk async zijn
-    async def another_async_function() -> Awaitable[Any]:
-        return await some_async_function()
