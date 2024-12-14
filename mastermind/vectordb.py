@@ -36,6 +36,12 @@ class VectorDatabase:
     def store_vector(self, content: str, embedding: List[float], category: str = 'default', importance: float = 0.5) -> str:
         """
         Sla een vector op met extra metadata
+        
+        :param content: De inhoud van de vector
+        :param embedding: De embedding van de vector als een lijst van floats
+        :param category: De categorie van de vector
+        :param importance: De belangrijkheidsscore van de vector
+        :return: Een string die de ID van de opgeslagen vector vertegenwoordigt
         """
         new_memory = Memory(content=content, category=category, importance=importance)
         self.session.add(new_memory)

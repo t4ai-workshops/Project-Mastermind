@@ -140,10 +140,7 @@ class KnowledgeCluster:
         Ruim oude en minder belangrijke herinneringen op
         """
         # Korte termijn geheugen: verwijder items ouder dan ingestelde uren
-        await self.short_term_db.cleanup_vectors(
-            max_age_days=self.short_term_retention/24, 
-            min_importance=0.2
-        )
+        await self.short_term_db.cleanup_vectors(min_importance=0.2)
         
         # Lange termijn geheugen: verwijder zeer oude of irrelevante items
         await self.long_term_db.cleanup_vectors(
