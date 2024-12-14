@@ -1,39 +1,41 @@
 from typing import List, Optional, Any, Union
-import chromadb
-from chromadb.config import Settings
-from chromadb.types import EmbeddingFunction
-from chromadb import Client
-from chromadb.api.types import QueryResult
+from sqlalchemy import create_engine, Column, Integer, String, Float
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 PERSIST_DIRECTORY = "./chroma_db"
 
-class Database:
-    def __init__(self) -> None:
-        self.chroma_client: Optional[Client] = None
-        self.settings: Settings = Settings(
-            chroma_db_impl="duckdb+parquet",
-            persist_directory=PERSIST_DIRECTORY,
-        )
+Base = declarative_base()
 
-    def connect(self) -> None:
-        self.chroma_client = chromadb.Client(self.settings)
+class Memory(Base):
+    __tablename__ = 'memories'
+    id = Column(Integer, primary_key=True)
+    content = Column(String)
+    category = Column(String)
+    importance = Column(Float)
 
-    def create_collection(self, name: str, embedding_function: Optional[EmbeddingFunction] = None) -> Any:
-        if self.chroma_client is None:
-            raise ValueError("Client not connected. Call connect() first.")
-        return self.chroma_client.create_collection(name=name, embedding_function=embedding_function)
-        
-    def get_collection(self, name: str) -> Any:
-        if self.chroma_client is None:
-            raise ValueError("Client not connected. Call connect() first.")
-        return self.chroma_client.get_collection(name=name)
+# Setup de SQLite database
+engine = create_engine('sqlite:///memories.db')
+Base.metadata.create_all(engine)
+Session = sessionmaker(bind=engine)
+session = Session()
 
-    def put_vectors(self, collection_name: str, vectors: List[List[float]], documents: List[str]) -> Any:
-        collection = self.get_collection(collection_name)
-        return collection.add(embeddings=vectors, documents=documents, ids=[str(i) for i in range(len(documents))])
+def add_memory(content, category, importance):
+    new_memory = Memory(content=content, category=category, importance=importance)
+    session.add(new_memory)
+    session.commit()
 
-    def query(self, collection_name: str, query_vector: List[float], n_results: int = 10) -> QueryResult:
-        collection = self.get_collection(collection_name)
-        return collection.query(query_embeddings=query_vector, n_results=n_results, include=['documents', 'distances', 'ids'])
+def get_memories_by_category(category):
+    return session.query(Memory).filter_by(category=category).all()
 
-db = Database()
+def update_memory_importance(memory_id, new_importance):
+    memory = session.query(Memory).filter_by(id=memory_id).first()
+    if memory:
+        memory.importance = new_importance
+        session.commit()
+
+def delete_memory(memory_id):
+    memory = session.query(Memory).filter_by(id=memory_id).first()
+    if memory:
+        session.delete(memory)
+        session.commit()

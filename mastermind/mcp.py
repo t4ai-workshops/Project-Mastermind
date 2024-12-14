@@ -2,6 +2,7 @@ from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union
 from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
+from mastermind.knowledge_cluster import KnowledgeCluster
 
 T = TypeVar('T')
 
@@ -38,39 +39,18 @@ class MCPProvider(ABC):
 
 class MCPManager:
     """Manages MCP resources and tools"""
-    def __init__(self) -> None:
-        self.providers: List[MCPProvider] = []
-        self.resources: Dict[str, MCPResource] = {}
-        self.tools: Dict[str, MCPTool] = {}
+    def __init__(self, knowledge_cluster: KnowledgeCluster) -> None:
+        self.knowledge_cluster = knowledge_cluster
     
-    def register_provider(self, provider: MCPProvider) -> None:
-        """Register a new MCP provider"""
-        self.providers.append(provider)
-    
-    async def initialize(self) -> None:
-        """Initialize all resources and tools from providers"""
-        for provider in self.providers:
-            resources = await provider.get_resources()
-            tools = await provider.get_tools()
-            
-            for resource in resources:
-                self.resources[resource.name] = resource
-            
-            for tool in tools:
-                self.tools[tool.name] = tool
-    
-    async def get_resource(self, name: str) -> Optional[MCPResource]:
-        """Get a specific resource by name"""
-        return self.resources.get(name)
-    
-    async def use_tool(self, name: str, **kwargs: Any) -> Any:
-        """Use a specific tool with given parameters"""
-        tool = self.tools.get(name)
-        if tool is None:
-            raise ValueError(f"Tool {name} not found")
-        if asyncio.iscoroutinefunction(tool.function):
-            return await tool.function(**kwargs)
-        return tool.function(**kwargs)
+    async def retrieve_context(self, query: str, max_results: int = 5) -> str:
+        """
+        Haal relevante contextuele herinneringen op voor een gegeven query.
+        """
+        relevant_memories = await self.knowledge_cluster.retrieve_knowledge(query, max_results)
+        return "\n\n".join([
+            f"Relevante herinnering: {memory.metadata.get('content', '')}" 
+            for memory in relevant_memories
+        ])
 
 class FileSystemProvider(MCPProvider):
     """Provides file system access via MCP"""

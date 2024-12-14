@@ -1,14 +1,14 @@
 # Core dependencies
-anthropic>=0.10.0
-fastapi>=0.109.0
-uvicorn>=0.27.0
-python-dotenv>=1.0.0
-pydantic>=2.5.0
+anthropic>=0.30.0
+fastapi>=0.115.6
+uvicorn>=0.32.1
+python-dotenv>=1.0.1
+pydantic>=2.9.2
 asyncio>=3.4.3
-python-multipart
-
-# Database
-chromadb>=0.5.23
+python-multipart >=0.0.19
+transformers==4.47.0
+tokenizers==0.21.0
+huggingface-hub==0.24.0
 
 # Testing
 pytest>=7.0.0
@@ -22,3 +22,6 @@ flake8>=7.0.0
 
 # Type support
 typing-extensions>=4.7.1
+
+# SQLAlchemy
+SQLAlchemy>=2.0.36
