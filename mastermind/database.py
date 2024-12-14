@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional, Any, Type
 from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -7,9 +7,9 @@ from datetime import datetime
 
 PERSIST_DIRECTORY = "./chroma_db"
 
-Base = declarative_base()
+BaseType = declarative_base()
 
-class Memory(Base):
+class Memory(BaseType):
     __tablename__ = 'memories'
     id = Column(Integer, primary_key=True)
     content = Column(String)
@@ -18,7 +18,7 @@ class Memory(Base):
 
 # Setup de SQLite database
 engine = create_engine('sqlite:///memories.db')
-Base.metadata.create_all(engine)
+BaseType.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
 
@@ -27,8 +27,9 @@ def add_memory(content: str, category: str, importance: float) -> None:
     session.add(new_memory)
     session.commit()
 
-def get_memories_by_category(category: str) -> list:
-    return session.query(Memory).filter_by(category=category).all()
+def get_memories_by_category(category: str) -> List[Memory]:
+    result = session.query(Memory).filter_by(category=category).all()
+    return list(result)
 
 async def update_memory_importance(session: Session, memory_id: int, importance: float) -> None:
     memory = session.query(Memory).filter(Memory.id == memory_id).first()
@@ -46,4 +47,5 @@ def create_memory(content: str, category: str, importance: float) -> Memory:
     return Memory(content=content, category=category, importance=importance)
 
 async def get_all_memories(session: Session) -> List[Memory]:
-    return session.query(Memory).all()
+    result = session.query(Memory).all()
+    return list(result)

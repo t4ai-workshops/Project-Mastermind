@@ -14,8 +14,8 @@ class VectorEntry(DatabaseEntry):
         embedding: Optional[List[float]] = None,
         category: str = 'default',
         importance: float = 0.5,
-        **kwargs
-    ):
+        **kwargs: Any
+    ) -> None:
         metadata = {
             'content': content,
             'embedding': embedding,
