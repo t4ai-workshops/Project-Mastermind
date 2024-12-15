@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
 from mastermind.knowledge_cluster import KnowledgeCluster
+from aiofiles import open as aio_open
 
 T = TypeVar('T')
 
@@ -22,7 +23,7 @@ class MCPTool:
     """Represents a tool that LLMs can use"""
     name: str
     description: str
-    function: AsyncCallable  # Alleen async functies toestaan
+    function: AsyncCallable[Any]
     parameters: Dict[str, Any]
 
 class MCPProvider(ABC):
@@ -88,12 +89,12 @@ class FileSystemProvider(MCPProvider):
     
     async def _read_file(self, path: str) -> str:
         """Read file contents"""
-        async with open(path, 'r') as f:
+        async with aio_open(path, 'r') as f:
             return await f.read()
     
     async def _write_file(self, path: str, content: str) -> None:
         """Write file contents"""
-        async with open(path, 'w') as f:
+        async with aio_open(path, 'w') as f:
             await f.write(content)
 
 class MCPEnabledAgent:

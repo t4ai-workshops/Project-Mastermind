@@ -48,7 +48,7 @@ class Agent(ABC):
                 messages=[{"role": "user", "content": prompt}]
             )
             self.logger.debug(f"Received response from {self.model.value}")
-            return str(message.content) if hasattr(message, 'content') else str(message)
+            return str(message.content[0].text) if hasattr(message, 'content') else str(message)
         except Exception as e:
             self.logger.error(f"Error in think method: {str(e)}")
             raise
