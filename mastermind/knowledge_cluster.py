@@ -43,7 +43,7 @@ class KnowledgeCluster:
         :param text: Invoer tekst
         :return: Embedding vector
         """
-        embedding = await self.embedding_model.encode(text)
+        embedding = await asyncio.to_thread(self.embedding_model.encode, text)
         return [float(x) for x in embedding]
     
     async def store_knowledge(
