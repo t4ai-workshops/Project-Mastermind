@@ -26,7 +26,7 @@ jobs:
     
     - name: Run tests
       run: |
-        python -m pytest tests/ --cov=mastermind --cov-report=xml
+        python -m pytest tests/ --cov=mastermind --cov-report=xml -o log_cli=true -o log_cli_level=DEBUG
       env:
         PYTHONPATH: ${{ github.workspace }}
     
