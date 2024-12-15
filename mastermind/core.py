@@ -5,7 +5,7 @@ from typing import List, Dict, Any, Optional, cast, Awaitable, TypeVar, Generic
 from dataclasses import dataclass
 from enum import Enum
 import anthropic 
-from anthropic.types import Message
+from anthropic.types import Message, MessageStream
 
 T = TypeVar('T')  # Voor generieke type hints
 
@@ -42,13 +42,13 @@ class Agent(ABC):
     async def think(self, prompt: str) -> str:
         try:
             self.logger.info(f"Agent {self.model.value} thinking about task")
-            message = await self.client.messages.create(
+            response: Message = await self.client.messages.create(
                 model=self.model.value,
                 max_tokens=1024,
                 messages=[{"role": "user", "content": prompt}]
             )
             self.logger.debug(f"Received response from {self.model.value}")
-            return str(message.content[0].text) if hasattr(message, 'content') else str(message)
+            return str(response.content[0].text)
         except Exception as e:
             self.logger.error(f"Error in think method: {str(e)}")
             raise

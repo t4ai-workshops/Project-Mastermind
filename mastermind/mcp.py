@@ -1,14 +1,15 @@
 from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union, Awaitable, Generic
+from typing_extensions import Protocol, TypeVar, Generic
 from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
 from mastermind.knowledge_cluster import KnowledgeCluster
 from aiofiles import open as aio_open
 
-T = TypeVar('T')
+T_co = TypeVar('T_co', covariant=True)  # Covariant type variable
 
-class AsyncCallable(Protocol[T]):
-    async def __call__(self, *args: Any, **kwargs: Any) -> T: ...
+class AsyncCallable(Protocol[T_co]):
+    async def __call__(self, *args: Any, **kwargs: Any) -> T_co: ...
 
 @dataclass
 class MCPResource:
@@ -90,7 +91,8 @@ class FileSystemProvider(MCPProvider):
     async def _read_file(self, path: str) -> str:
         """Read file contents"""
         async with aio_open(path, 'r') as f:
-            return await f.read()
+            content = await f.read()
+            return str(content)
     
     async def _write_file(self, path: str, content: str) -> None:
         """Write file contents"""
