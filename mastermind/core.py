@@ -37,6 +37,12 @@ def is_text_block(block: Union[TextBlock, ToolUseBlock]) -> TypeGuard[TextBlock]
     """Check of een block een TextBlock is"""
     return isinstance(block, TextBlock)
 
+def process_block(block: Union[TextBlock, ToolUseBlock]) -> str:
+    """Verwerk een block met correcte type discriminatie"""
+    if is_text_block(block):
+        return block.text
+    return f"Tool: {block.tool_name} with input: {block.tool_input}"
+
 
 @dataclass
 class TaskResult(Generic[T]):
@@ -67,7 +73,12 @@ class Agent(ABC):
                 messages=[{"role": "user", "content": prompt}]
             )
             self.logger.debug(f"Received response from {self.model.value}")
-            return str(message.content[0].text)
+            
+            # Veilige type check en conversie
+            if message.content and isinstance(message.content[0], anthropic.types.ContentBlock):
+                return str(message.content[0].text) if hasattr(message.content[0], 'text') else ""
+            return ""
+            
         except Exception as e:
             self.logger.error(f"Error in think method: {str(e)}")
             raise
