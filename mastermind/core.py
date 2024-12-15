@@ -6,8 +6,7 @@ from typing_extensions import TypeGuard
 from dataclasses import dataclass
 from enum import Enum
 import anthropic 
-from anthropic.types import Message, MessageParam, MessageContent
-from anthropic._types import ContentBlock as AnthropicContentBlock
+from anthropic.types import Message, MessageParam, TextBlock
 
 T = TypeVar('T')  # Voor generieke type hints
 
@@ -74,8 +73,8 @@ class Agent(ABC):
             )
             self.logger.debug(f"Received response from {self.model.value}")
             
-            if message.content and isinstance(message.content[0], MessageContent):
-                return str(message.content[0].text) if hasattr(message.content[0], 'text') else ""
+            if message.content and isinstance(message.content[0], TextBlock):
+                return str(message.content[0].text)
             return ""
             
         except Exception as e:
