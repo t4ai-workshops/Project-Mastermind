@@ -43,13 +43,11 @@ async def test_strategist_agent():
     # Create a mock client
     mock_client = AsyncMock()
 
-    # Create a mock response and configure its content attribute
-    mock_response = AsyncMock()
-    mock_response.__getitem__.return_value = {"text": "strategy response"}  # Mocking response to support dict-like access
-    mock_response.content = [{"text": "strategy response"}]  # Mimic actual response content
+    # Create a mock for the `think` method's return value
+    mock_think_result = "1. Decompose task\n2. Strategy details\n3. Challenges\n4. Solution path"
 
-    # Mock the `messages.create` method to return the mock response
-    mock_client.messages.create.return_value = mock_response
+    # Mock the `think` method of the agent
+    StrategistAgent.think = AsyncMock(return_value=mock_think_result)
 
     # Instantiate the StrategistAgent with the mock client
     agent = StrategistAgent(mock_client)
@@ -59,4 +57,4 @@ async def test_strategist_agent():
 
     # Assertions
     assert result.success, f"Expected success but got error: {result.error}"
-    assert result.data == "strategy response", f"Expected data to be 'strategy response' but got {result.data}"
+    assert result.data == mock_think_result, f"Expected data to be '{mock_think_result}' but got {result.data}"
