@@ -1,0 +1,19 @@
+flowchart TD
+    A[User Uploads Files] --> B[Error Analysis]
+    A --> C[Dependencies Review]
+    A --> D[GitHub Actions Workflow Review]
+    B --> E[Test Case Debugging]
+    C --> E
+    D --> E
+    E --> F[Agent Process Logic]
+    F --> G[Mocking Think Method]
+    G --> H[Test Corrections]
+    H --> I[Future Debugging Advice]
+
+    classDef review fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef process fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef solution fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px
+
+    class A,B,C,D review
+    class E,F,G process
+    class H,I solution
