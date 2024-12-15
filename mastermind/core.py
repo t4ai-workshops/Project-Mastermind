@@ -21,7 +21,7 @@ class ModelType(Enum):
 
 
 @dataclass
-class TextBlock:
+class ResponseBlock:
     """Block voor text-based responses"""
     text: str
     metadata: Optional[Dict[str, Any]] = None
@@ -33,11 +33,11 @@ class ToolUseBlock:
     tool_input: Dict[str, Any]
     result: Optional[Any] = None
 
-def is_text_block(block: Union[TextBlock, ToolUseBlock]) -> TypeGuard[TextBlock]:
-    """Check of een block een TextBlock is"""
-    return isinstance(block, TextBlock)
+def is_response_block(block: Union[ResponseBlock, ToolUseBlock]) -> TypeGuard[ResponseBlock]:
+    """Check of een block een ResponseBlock is"""
+    return isinstance(block, ResponseBlock)
 
-def format_block(block: Union[TextBlock, ToolUseBlock]) -> str:
+def format_block(block: Union[ResponseBlock, ToolUseBlock]) -> str:
     """Formatteert een block op een veilige en duidelijke manier"""
     if isinstance(block, ToolUseBlock):
         return f"Tool: {block.tool_name} with input: {block.tool_input}"

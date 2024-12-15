@@ -7,7 +7,11 @@ from mastermind.core import (
     StrategistAgent,
     TaskResult,
     ModelType,
-    Agent
+    Agent,
+    ResponseBlock,
+    ToolUseBlock,
+    format_block,
+    is_response_block
 )
 
 # MCP protocol imports
@@ -36,6 +40,10 @@ __all__ = [
     'TaskResult',
     'ModelType',
     'Agent',
+    'ResponseBlock',
+    'ToolUseBlock',
+    'format_block',
+    'is_response_block',
     
     # MCP protocol components
     'MCPManager',
