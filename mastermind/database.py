@@ -1,7 +1,9 @@
 from typing import List, Optional, Any, Type
-from sqlalchemy import create_engine, Column, Integer, String, Float
-from sqlalchemy.ext.declarative import declarative_base 
-from sqlalchemy.orm import sessionmaker, Session, DeclarativeMeta 
+from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, DeclarativeMeta
+from sqlalchemy.future import select
 
 PERSIST_DIRECTORY = "./chroma_db"
 
@@ -14,36 +16,51 @@ class Memory(Base):
     category = Column(String)
     importance = Column(Float)
 
-# Setup de SQLite database
-engine = create_engine('sqlite:///memories.db')
-Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
-session = Session()
+# Setup de async SQLite database
+engine = create_async_engine('sqlite+aiosqlite:///memories.db')
+async_session = sessionmaker(
+    engine, class_=AsyncSession, expire_on_commit=False
+)
 
-def add_memory(content: str, category: str, importance: float) -> None:
-    new_memory = Memory(content=content, category=category, importance=importance)
-    session.add(new_memory)
-    session.commit()
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-def get_memories_by_category(category: str) -> List[Memory]:
-    result = session.query(Memory).filter_by(category=category).all()
-    return list(result)
+async def get_session() -> AsyncSession:
+    async with async_session() as session:
+        return session
 
-async def update_memory_importance(session: Session, memory_id: int, importance: float) -> None:
-    memory = session.query(Memory).filter(Memory.id == memory_id).first()
-    if memory:
-        memory.importance = importance
-        session.commit()
+async def add_memory(content: str, category: str, importance: float) -> None:
+    async with async_session() as session:
+        new_memory = Memory(content=content, category=category, importance=importance)
+        session.add(new_memory)
+        await session.commit()
 
-async def delete_memory(session: Session, memory_id: int) -> None:
-    memory = session.query(Memory).filter(Memory.id == memory_id).first()
-    if memory:
-        session.delete(memory)
-        session.commit()
+async def get_memories_by_category(category: str) -> List[Memory]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(Memory).filter_by(category=category)
+        )
+        return list(result.scalars().all())
 
-def create_memory(content: str, category: str, importance: float) -> Memory:
+async def update_memory_importance(memory_id: int, importance: float) -> None:
+    async with async_session() as session:
+        memory = await session.get(Memory, memory_id)
+        if memory:
+            memory.importance = importance
+            await session.commit()
+
+async def delete_memory(memory_id: int) -> None:
+    async with async_session() as session:
+        memory = await session.get(Memory, memory_id)
+        if memory:
+            await session.delete(memory)
+            await session.commit()
+
+async def create_memory(content: str, category: str, importance: float) -> Memory:
     return Memory(content=content, category=category, importance=importance)
 
-async def get_all_memories(session: Session) -> List[Memory]:
-    result = session.query(Memory).all()
-    return list(result)
+async def get_all_memories() -> List[Memory]:
+    async with async_session() as session:
+        result = await session.execute(select(Memory))
+        return list(result.scalars().all())

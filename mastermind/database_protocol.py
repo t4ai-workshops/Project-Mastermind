@@ -1,4 +1,4 @@
-from typing import Protocol, List, Dict, Any, Optional
+from typing import Protocol, List, Dict, Any, Optional, Awaitable
 from dataclasses import dataclass, asdict, field
 from datetime import datetime
 import uuid
@@ -25,25 +25,25 @@ class DatabaseEntry:
 class DatabaseInterface(Protocol):
     """Protocol voor database operaties"""
     
-    async def create(self, entry: DatabaseEntry) -> str:
+    def create(self, entry: DatabaseEntry) -> Awaitable[str]:
         """Maak een nieuwe entry aan"""
         ...
 
-    async def read(self, entry_id: str) -> Optional[DatabaseEntry]:
+    def read(self, entry_id: str) -> Awaitable[Optional[DatabaseEntry]]:
         """Lees een specifieke entry"""
         ...
 
-    async def update(self, entry_id: str, data: Dict[str, Any]) -> bool:
+    def update(self, entry_id: str, data: Dict[str, Any]) -> Awaitable[bool]:
         """Update een bestaande entry"""
         ...
 
-    async def delete(self, entry_id: str) -> bool:
+    def delete(self, entry_id: str) -> Awaitable[bool]:
         """Verwijder een entry"""
         ...
 
-    async def query(self, 
-                    filters: Optional[Dict[str, Any]] = None, 
-                    limit: int = 10) -> List[DatabaseEntry]:
+    def query(self, 
+             filters: Optional[Dict[str, Any]] = None, 
+             limit: int = 10) -> Awaitable[List[DatabaseEntry]]:
         """Zoek entries met optionele filters"""
         ...
 

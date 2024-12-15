@@ -1,5 +1,6 @@
 """MasterMind - Advanced multi-agent system leveraging different LLM models."""
 
+# Core system imports
 from mastermind.core import (
     Orchestrator,
     WorkerAgent,
@@ -9,6 +10,7 @@ from mastermind.core import (
     Agent
 )
 
+# MCP protocol imports
 from mastermind.mcp import (
     MCPManager,
     MCPProvider,
@@ -18,15 +20,16 @@ from mastermind.mcp import (
     FileSystemProvider
 )
 
-from mastermind.vectordb import (
-    VectorDatabase,
-    VectorEntry
-)
+# Database and memory management
+from mastermind.database_protocol import DatabaseEntry
+from mastermind.database import Memory
+from mastermind.vectordb import VectorDatabase, VectorEntry
+from mastermind.knowledge_cluster import KnowledgeCluster
 
-__version__ = '0.1.0'
+__version__ = '0.1.2'
 
 __all__ = [
-    # Core components
+    # Core system components
     'Orchestrator',
     'WorkerAgent',
     'StrategistAgent',
@@ -34,7 +37,7 @@ __all__ = [
     'ModelType',
     'Agent',
     
-    # MCP components
+    # MCP protocol components
     'MCPManager',
     'MCPProvider',
     'MCPResource',
@@ -42,7 +45,12 @@ __all__ = [
     'MCPEnabledAgent',
     'FileSystemProvider',
     
-    # Vector database components
+    # Database components
+    'DatabaseEntry',
+    'Memory',
+    
+    # Memory management components
     'VectorDatabase',
-    'VectorEntry'
+    'VectorEntry',
+    'KnowledgeCluster'
 ]

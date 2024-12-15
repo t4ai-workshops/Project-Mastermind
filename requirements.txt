@@ -4,7 +4,6 @@ fastapi>=0.115.6
 uvicorn>=0.32.1
 python-dotenv>=1.0.1
 pydantic>=2.9.2
-asyncio>=3.4.3
 python-multipart >=0.0.19
 transformers==4.47.0
 tokenizers==0.21.0
@@ -25,3 +24,6 @@ typing-extensions>=4.7.1
 
 # SQLAlchemy
 SQLAlchemy>=2.0.36
+asyncio>=3.4.3
+aiosqlite>=0.20.0
+greenlet>=3.1.1

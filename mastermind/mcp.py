@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union
+from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union, Awaitable
 from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
@@ -7,7 +7,7 @@ from mastermind.knowledge_cluster import KnowledgeCluster
 T = TypeVar('T')
 
 class AsyncCallable(Protocol):
-    async def __call__(self, *args: Any, **kwargs: Any) -> Any: ...
+    async def __call__(self, *args: Any, **kwargs: Any) -> T: ...
 
 @dataclass
 class MCPResource:
@@ -22,7 +22,7 @@ class MCPTool:
     """Represents a tool that LLMs can use"""
     name: str
     description: str
-    function: Union[Callable[..., Any], AsyncCallable]
+    function: AsyncCallable  # Alleen async functies toestaan
     parameters: Dict[str, Any]
 
 class MCPProvider(ABC):
@@ -42,21 +42,19 @@ class MCPManager:
     
     def __init__(self, knowledge_cluster: KnowledgeCluster):
         self.knowledge_cluster = knowledge_cluster
-        self.resources: Dict[str, Any] = {}  # Voeg een type-annotatie toe
+        self.resources: Dict[str, MCPResource] = {}
+        self.tools: Dict[str, MCPTool] = {}
     
-    def use_tool(self, tool_name: str, *args: Any, **kwargs: Any) -> Any:
-        """
-        Gebruik een specifiek hulpmiddel binnen MCP
-        
-        :param tool_name: Naam van het hulpmiddel
-        :return: Resultaat van het hulpmiddel
-        """
-        # Implementeer logica om het hulpmiddel te gebruiken
-        if tool_name in self.resources:
-            tool = self.resources[tool_name]
-            return tool(*args, **kwargs)
-        else:
-            raise ValueError(f"Hulpmiddel {tool_name} niet gevonden")
+    async def register_tool(self, tool: MCPTool) -> None:
+        """Registreer een nieuw hulpmiddel"""
+        self.tools[tool.name] = tool
+    
+    async def use_tool(self, tool_name: str, *args: Any, **kwargs: Any) -> Any:
+        """Gebruik een specifiek hulpmiddel binnen MCP"""
+        if tool_name in self.tools:
+            tool = self.tools[tool_name]
+            return await tool.function(*args, **kwargs)
+        raise ValueError(f"Hulpmiddel {tool_name} niet gevonden")
 
 class FileSystemProvider(MCPProvider):
     """Provides file system access via MCP"""
@@ -90,13 +88,13 @@ class FileSystemProvider(MCPProvider):
     
     async def _read_file(self, path: str) -> str:
         """Read file contents"""
-        with open(path, 'r') as f:
-            return f.read()
+        async with open(path, 'r') as f:
+            return await f.read()
     
     async def _write_file(self, path: str, content: str) -> None:
         """Write file contents"""
-        with open(path, 'w') as f:
-            f.write(content)
+        async with open(path, 'w') as f:
+            await f.write(content)
 
 class MCPEnabledAgent:
     """Mixin to add MCP capabilities to agents"""
@@ -105,11 +103,11 @@ class MCPEnabledAgent:
     
     async def get_context(self, query: str) -> List[MCPResource]:
         """Get relevant resources for a given query"""
-        # In a real implementation, this would use semantic search
-        return [
-            resource for resource in self.mcp.resources.values()
-            if query.lower() in str(resource.content).lower()
-        ]
+        resources = []
+        for resource in self.mcp.resources.values():
+            if query.lower() in str(resource.content).lower():
+                resources.append(resource)
+        return resources
     
     async def use_tool(self, name: str, **kwargs: Any) -> Any:
         """Use an MCP tool"""

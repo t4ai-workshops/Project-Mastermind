@@ -65,21 +65,21 @@ class KnowledgeCluster:
         embedding = await self.get_vector_embedding(content)
         
         if is_context_specific:
-            return self.context_db.store_vector(
+            return await self.context_db.store_vector(
                 content=content,
                 embedding=embedding,
                 category=category,
                 importance=importance
             )
         elif importance > 0.7:  # Hoge belangrijkheid naar lange termijn
-            return self.long_term_db.store_vector(
+            return await self.long_term_db.store_vector(
                 content=content,
                 embedding=embedding,
                 category=category,
                 importance=importance
             )
         else:
-            return self.short_term_db.store_vector(
+            return await self.short_term_db.store_vector(
                 content=content,
                 embedding=embedding,
                 category=category,
@@ -109,28 +109,30 @@ class KnowledgeCluster:
         query_embedding = await self.get_vector_embedding(query)
         results: List[VectorEntry] = []
         
+        tasks = []
         if include_short_term:
-            short_term = self.short_term_db.query_vectors(
+            tasks.append(self.short_term_db.query_vectors(
                 n_results=max_results,
                 min_importance=min_importance
-            )
-            results.extend(short_term)
+            ))
         
         if include_long_term:
-            long_term = self.long_term_db.query_vectors(
+            tasks.append(self.long_term_db.query_vectors(
                 n_results=max_results,
                 min_importance=min_importance
-            )
-            results.extend(long_term)
+            ))
         
         if include_context:
-            context = self.context_db.query_vectors(
+            tasks.append(self.context_db.query_vectors(
                 n_results=max_results,
                 min_importance=min_importance
-            )
-            results.extend(context)
+            ))
         
-        # Sorteer op relevantie
+        if tasks:
+            all_results = await asyncio.gather(*tasks)
+            for result_set in all_results:
+                results.extend(result_set)
+        
         return sorted(
             results, 
             key=lambda x: x.metadata.get('importance', 0), 
@@ -139,21 +141,13 @@ class KnowledgeCluster:
     
     async def cleanup_memories(self) -> None:
         """Ruim oude en minder belangrijke herinneringen op"""
-        tasks: List[asyncio.Task[List[int]]] = []
+        tasks = []
         
         if self.short_term_db:
-            tasks.append(
-                asyncio.create_task(
-                    self.short_term_db.cleanup_vectors(min_importance=0.2)
-                )
-            )
+            tasks.append(self.short_term_db.cleanup_vectors(min_importance=0.2))
         
         if self.long_term_db:
-            tasks.append(
-                asyncio.create_task(
-                    self.long_term_db.cleanup_vectors(min_importance=0.5)
-                )
-            )
+            tasks.append(self.long_term_db.cleanup_vectors(min_importance=0.5))
         
         if tasks:
             await asyncio.gather(*tasks)
@@ -184,8 +178,7 @@ class KnowledgeCluster:
             return False
         
         try:
-            result = selected_db.update_importance(entry_id, new_importance)
-            return result
+            return await selected_db.update_importance(entry_id, new_importance)
         except Exception as e:
             self.logger.error(f"Error updating importance: {e}")
             return False

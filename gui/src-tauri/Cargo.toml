@@ -1,6 +1,6 @@
 [package]
 name = "mastermind-app"
-version = "0.1.0"
+version = "0.1.2"
 description = "MasterMind AI Assistant"
 authors = ["t4ai"]
 license = ""

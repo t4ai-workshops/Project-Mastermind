@@ -6,27 +6,41 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-import anthropic
+import anthropic 
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Literal, List, Dict, Any
+from typing import Literal, List, Dict, Any, Optional
 import logging
 import uvicorn
+from contextlib import asynccontextmanager
 
 # Nieuwe imports
 from mastermind.knowledge_cluster import KnowledgeCluster
 from mastermind.vectordb import VectorEntry
 from mastermind.mcp import MCPManager
-from mastermind.database import add_memory, get_memories_by_category
+from mastermind.database import add_memory, get_memories_by_category, init_db
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-# Load environment variables
-load_dotenv()
+# Startup en shutdown handlers
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    logger.info("Initializing database...")
+    await init_db()
+    logger.info("Database initialized")
+    
+    yield
+    
+    # Shutdown
+    logger.info("Cleaning up...")
 
 # Initialize FastAPI app
-app = FastAPI(title="Mastermind AI API")
+app = FastAPI(
+    title="Mastermind AI API",
+    lifespan=lifespan
+)
 
 # Initialize Knowledge Cluster
 knowledge_cluster = KnowledgeCluster()
@@ -77,10 +91,10 @@ async def chat_endpoint(request: ChatRequest):
         logger.debug(f"Received chat request: {request}")
         
         # Voeg een nieuwe herinnering toe
-        add_memory(content="Voorbeeld content", category="chat_response", importance=0.5)
+        await add_memory(content="Voorbeeld content", category="chat_response", importance=0.5)
         
         # Haal herinneringen op
-        memories = get_memories_by_category("chat_response")
+        memories = await get_memories_by_category("chat_response")
         logger.debug(f"Retrieved memories: {memories}")
         
         # Zoek relevante herinneringen
@@ -88,23 +102,15 @@ async def chat_endpoint(request: ChatRequest):
             query=request.message,
             max_results=3
         )
-        logger.debug(f"Relevant memories: {relevant_memories}")
         
-        # Bereid context voor met herinneringen
-        enhanced_context = "\n\n".join([
-            f"Relevante herinnering: {memory.metadata.get('content', '')}" 
-            for memory in relevant_memories
-        ]) + f"\n\nOorspronkelijke bericht: {request.message}"
-        logger.debug(f"Enhanced context: {enhanced_context}")
+        # Bereid context voor
+        enhanced_context = await prepare_context(request.message, relevant_memories)
         
-        response = client.messages.create(
+        # API call
+        response = await process_api_call(
             model=MODELS["claude-3-opus"],
-            max_tokens=1000,
-            messages=[
-                {"role": "user", "content": enhanced_context}
-            ]
+            context=enhanced_context
         )
-        logger.debug(f"API Response: {response.content[0].text}")
         
         # Sla nieuwe kennis op
         await knowledge_cluster.store_knowledge(
@@ -113,14 +119,30 @@ async def chat_endpoint(request: ChatRequest):
             importance=0.6
         )
         
-        logger.debug("Chat processed successfully")
         return {
             "response": response.content[0].text,
             "memories": [memory.metadata for memory in relevant_memories]
         }
     except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Chat error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail={"error": str(e), "type": type(e).__name__}
+        )
+
+# Helper functies
+async def prepare_context(message: str, memories: List[VectorEntry]) -> str:
+    return "\n\n".join([
+        f"Relevante herinnering: {memory.metadata.get('content', '')}" 
+        for memory in memories
+    ]) + f"\n\nOorspronkelijke bericht: {message}"
+
+async def process_api_call(model: str, context: str):
+    return await client.messages.create(
+        model=model,
+        max_tokens=1000,
+        messages=[{"role": "user", "content": context}]
+    )
 
 # Code Generation Endpoint met geheugen context
 @app.post("/generate-code")
