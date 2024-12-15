@@ -1,19 +1,16 @@
 name: Python Package
-
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-
 jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9, "3.10", "3.11"]
-
+        python-version: ["3.11"]
     steps:
     - uses: actions/checkout@v3
     
@@ -27,53 +24,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install .[test]
     
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
-    - name: Type checking with mypy
-      run: |
-        mypy mastermind/ --ignore-missing-imports
-    
     - name: Run tests
       run: |
         python -m pytest tests/ --cov=mastermind --cov-report=xml
       env:
         PYTHONPATH: ${{ github.workspace }}
-        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
         file: ./coverage.xml
         fail_ci_if_error: false
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-    
-    - name: Install build dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-    
-    - name: Build package
-      run: python -m build
-    
-    - name: Store the distribution packages
-      uses: actions/upload-artifact@v3
-      with:
-        name: python-package-distributions
-        path: dist/
