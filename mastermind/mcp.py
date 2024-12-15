@@ -1,5 +1,4 @@
 from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union, Awaitable, Generic
-from typing_extensions import Protocol, TypeVar, Generic
 from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
