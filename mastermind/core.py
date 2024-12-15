@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional, cast, Awaitable, TypeVar, Generic
+from typing import List, Dict, Any, Optional, cast, Awaitable, TypeVar, Generic, Union
+from typing_extensions import TypeGuard
 from dataclasses import dataclass
 from enum import Enum
 import anthropic 
@@ -17,6 +18,24 @@ class ModelType(Enum):
     HAIKU = "claude-3-haiku"
     SONNET = "claude-3.5-sonnet"
     OPUS = "claude-3-opus"
+
+
+@dataclass
+class TextBlock:
+    """Block voor text-based responses"""
+    text: str
+    metadata: Optional[Dict[str, Any]] = None
+
+@dataclass
+class ToolUseBlock:
+    """Block voor tool-based responses"""
+    tool_name: str
+    tool_input: Dict[str, Any]
+    result: Optional[Any] = None
+
+def is_text_block(block: Union[TextBlock, ToolUseBlock]) -> TypeGuard[TextBlock]:
+    """Check of een block een TextBlock is"""
+    return isinstance(block, TextBlock)
 
 
 @dataclass

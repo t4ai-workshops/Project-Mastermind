@@ -1,20 +1,22 @@
 from typing import List, Optional, Any, Type, cast
 from sqlalchemy import Column, Integer, String, Float
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeMeta, declarative_base, registry
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.future import select
 
 PERSIST_DIRECTORY = "./chroma_db"
 
-mapper_registry = registry()
-Base = mapper_registry.generate_base()
+# Moderne SQLAlchemy 2.0 aanpak
+class Base(DeclarativeBase):
+    pass
 
 class Memory(Base):
     __tablename__ = 'memories'
-    id = Column(Integer, primary_key=True)
-    content = Column(String)
-    category = Column(String)
-    importance = Column(Float)
+    
+    id: Mapped[int] = mapped_column(primary_key=True)
+    content: Mapped[str] = mapped_column()
+    category: Mapped[str] = mapped_column()
+    importance: Mapped[float] = mapped_column()
 
 # Setup de async SQLite database
 engine = create_async_engine('sqlite+aiosqlite:///memories.db')
