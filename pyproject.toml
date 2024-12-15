@@ -35,6 +35,7 @@ dependencies = [
     "types_aiofiles",
     "tokenizers==0.21.0",
     "transformers==4.47.0",
+    "sentence-transformers>=2.2.2",
     "pydantic",
 ]
 
