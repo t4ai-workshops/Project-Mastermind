@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 from mastermind.core import ModelType, TaskResult, WorkerAgent, StrategistAgent
+from anthropic.types import Message, TextBlock
 
 
 def test_model_types():
@@ -23,9 +24,17 @@ async def test_worker_agent():
     mock_client = MagicMock()
     mock_client.messages = MagicMock()
     
-    # The create method should be an AsyncMock with a proper return value structure
+    # Create a TextBlock mock with the response
+    text_block = MagicMock(spec=TextBlock)
+    text_block.text = "test response"
+    
+    # Create a Message mock with content as a list containing the TextBlock
+    message_mock = AsyncMock(spec=Message)
+    message_mock.content = [text_block]
+    
+    # Setup the create method to return the message
     mock_create = AsyncMock()
-    mock_create.return_value.content = "test response"
+    mock_create.return_value = message_mock
     mock_client.messages.create = mock_create
     
     # Create agent with mock client
@@ -50,9 +59,17 @@ async def test_strategist_agent():
     mock_client = MagicMock()
     mock_client.messages = MagicMock()
     
-    # The create method should be an AsyncMock with a proper return value structure
+    # Create a TextBlock mock with the response
+    text_block = MagicMock(spec=TextBlock)
+    text_block.text = "strategy response"
+    
+    # Create a Message mock with content as a list containing the TextBlock
+    message_mock = AsyncMock(spec=Message)
+    message_mock.content = [text_block]
+    
+    # Setup the create method to return the message
     mock_create = AsyncMock()
-    mock_create.return_value.content = "strategy response"
+    mock_create.return_value = message_mock
     mock_client.messages.create = mock_create
     
     # Create agent with mock client
