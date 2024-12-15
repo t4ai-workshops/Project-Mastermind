@@ -20,14 +20,22 @@ def test_task_result():
 
 @pytest.mark.asyncio
 async def test_worker_agent():
-    mock_client = AsyncMock()
-    mock_response = AsyncMock()
-    mock_response.content = [MagicMock(text="test response")]
-    mock_client.messages.create.return_value = mock_response
+    # Mock setup
+    text_block = MagicMock(spec=TextBlock)
+    text_block.text = "test response"
     
+    mock_message = MagicMock(spec=Message)
+    mock_message.content = [text_block]
+    
+    mock_client = MagicMock()
+    mock_client.messages = MagicMock()
+    mock_client.messages.create = AsyncMock(return_value=mock_message)
+    
+    # Test
     agent = WorkerAgent(mock_client)
     result = await agent.process("test task")
     
+    # Assertions
     assert result.success
     assert result.data == "test response"
     mock_client.messages.create.assert_called_once()
@@ -39,14 +47,22 @@ async def test_worker_agent():
 
 @pytest.mark.asyncio
 async def test_strategist_agent():
-    mock_client = AsyncMock()
-    mock_response = AsyncMock()
-    mock_response.content = [MagicMock(text="strategy response")]
-    mock_client.messages.create.return_value = mock_response
+    # Mock setup
+    text_block = MagicMock(spec=TextBlock)
+    text_block.text = "strategy response"
     
+    mock_message = MagicMock(spec=Message)
+    mock_message.content = [text_block]
+    
+    mock_client = MagicMock()
+    mock_client.messages = MagicMock()
+    mock_client.messages.create = AsyncMock(return_value=mock_message)
+    
+    # Test
     agent = StrategistAgent(mock_client)
     result = await agent.process("test task")
     
+    # Assertions
     assert result.success
     assert result.data == "strategy response"
     mock_client.messages.create.assert_called_once()
