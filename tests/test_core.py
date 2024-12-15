@@ -40,22 +40,23 @@ async def test_worker_agent():
     
 @pytest.mark.asyncio
 async def test_strategist_agent():
-    # Create a mock client and mock response
+    # Create a mock client
     mock_client = AsyncMock()
+
+    # Create a mock response and configure its content attribute
     mock_response = AsyncMock()
-    
-    # Configure the mock response to have a content attribute that behaves as expected
-    mock_response.content = [{"text": "strategy response"}]  # Directly assign content
-    
-    # Mock the client's messages.create method to return this response
+    mock_response.__getitem__.return_value = {"text": "strategy response"}  # Mocking response to support dict-like access
+    mock_response.content = [{"text": "strategy response"}]  # Mimic actual response content
+
+    # Mock the `messages.create` method to return the mock response
     mock_client.messages.create.return_value = mock_response
 
-    # Instantiate the agent with the mock client
+    # Instantiate the StrategistAgent with the mock client
     agent = StrategistAgent(mock_client)
 
-    # Call the agent's process method and capture the result
+    # Execute the agent's `process` method with a test task
     result = await agent.process("test task")
 
-    # Assert the result is successful and contains the correct data
-    assert result.success
-    assert result.data == "strategy response"  # Adjust based on actual implementation
+    # Assertions
+    assert result.success, f"Expected success but got error: {result.error}"
+    assert result.data == "strategy response", f"Expected data to be 'strategy response' but got {result.data}"
