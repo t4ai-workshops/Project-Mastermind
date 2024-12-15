@@ -1,10 +1,10 @@
-from typing import List, Dict, Any, Optional, Awaitable
-from datetime import datetime, timedelta
-import logging
 import asyncio
+import logging
+from datetime import datetime, timedelta
+from typing import List, Dict, Any, Optional, Awaitable
 
-from .vectordb import VectorDatabase, VectorEntry
 from sentence_transformers import SentenceTransformer
+from .vectordb import VectorDatabase, VectorEntry
 
 class KnowledgeCluster:
     """Gelaagd kennisopslagsysteem"""
@@ -43,7 +43,8 @@ class KnowledgeCluster:
         :param text: Invoer tekst
         :return: Embedding vector
         """
-        embedding = await asyncio.to_thread(self.embedding_model.encode, text)
+        loop = asyncio.get_running_loop()
+        embedding = await loop.run_in_executor(None, self.embedding_model.encode, text)
         return [float(x) for x in embedding]
     
     async def store_knowledge(
