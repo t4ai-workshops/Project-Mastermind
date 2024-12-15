@@ -1,13 +1,13 @@
-from typing import List, Optional, Any, Type
+from typing import List, Optional, Any, Type, cast
 from sqlalchemy import Column, Integer, String, Float
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, DeclarativeMeta
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.orm import DeclarativeMeta, declarative_base, registry
 from sqlalchemy.future import select
 
 PERSIST_DIRECTORY = "./chroma_db"
 
-Base: DeclarativeMeta = declarative_base()
+mapper_registry = registry()
+Base = mapper_registry.generate_base()
 
 class Memory(Base):
     __tablename__ = 'memories'
@@ -18,8 +18,10 @@ class Memory(Base):
 
 # Setup de async SQLite database
 engine = create_async_engine('sqlite+aiosqlite:///memories.db')
-async_session = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+async_session = async_sessionmaker(
+    engine,
+    class_=AsyncSession,
+    expire_on_commit=False
 )
 
 async def init_db() -> None:
@@ -27,8 +29,8 @@ async def init_db() -> None:
         await conn.run_sync(Base.metadata.create_all)
 
 async def get_session() -> AsyncSession:
-    async with async_session() as session:
-        return session
+    session = async_session()
+    return session
 
 async def add_memory(content: str, category: str, importance: float) -> None:
     async with async_session() as session:

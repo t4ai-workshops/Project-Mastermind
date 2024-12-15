@@ -42,15 +42,13 @@ class Agent(ABC):
     async def think(self, prompt: str) -> str:
         try:
             self.logger.info(f"Agent {self.model.value} thinking about task")
-            response: Message = await self.client.messages.create(
+            message = self.client.messages.create(
                 model=self.model.value,
                 max_tokens=1024,
                 messages=[{"role": "user", "content": prompt}]
             )
             self.logger.debug(f"Received response from {self.model.value}")
-            if hasattr(response.content[0], 'text'):
-                return str(response.content[0].text)
-            return str(response.content[0])
+            return str(message.content[0].text)
         except Exception as e:
             self.logger.error(f"Error in think method: {str(e)}")
             raise
