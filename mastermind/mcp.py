@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union, Awaitable
+from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union, Awaitable, Generic
 from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
@@ -7,7 +7,7 @@ from aiofiles import open as aio_open
 
 T = TypeVar('T')
 
-class AsyncCallable(Protocol):
+class AsyncCallable(Protocol[T]):
     async def __call__(self, *args: Any, **kwargs: Any) -> T: ...
 
 @dataclass
