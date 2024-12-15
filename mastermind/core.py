@@ -6,7 +6,7 @@ from typing_extensions import TypeGuard
 from dataclasses import dataclass
 from enum import Enum
 import anthropic 
-from anthropic.types import Message, MessageParam
+from anthropic.types import Message, MessageParam, ContentBlock
 
 T = TypeVar('T')  # Voor generieke type hints
 
@@ -37,12 +37,13 @@ def is_text_block(block: Union[TextBlock, ToolUseBlock]) -> TypeGuard[TextBlock]
     """Check of een block een TextBlock is"""
     return isinstance(block, TextBlock)
 
-def process_block(block: Union[TextBlock, ToolUseBlock]) -> str:
-    """Verwerk een block met correcte type discriminatie"""
-    if is_text_block(block):
-        return block.text
-    return f"Tool: {block.tool_name} with input: {block.tool_input}"
-
+def format_block(block: Union[TextBlock, ToolUseBlock]) -> str:
+    """Formatteert een block op een veilige en duidelijke manier"""
+    if isinstance(block, ToolUseBlock):
+        return f"Tool: {block.tool_name} with input: {block.tool_input}"
+    elif isinstance(block, TextBlock):
+        return f"Text: {block.text}"
+    return "Unknown block type"  # fallback voor onverwachte gevallen
 
 @dataclass
 class TaskResult(Generic[T]):
@@ -74,8 +75,7 @@ class Agent(ABC):
             )
             self.logger.debug(f"Received response from {self.model.value}")
             
-            # Veilige type check en conversie
-            if message.content and isinstance(message.content[0], anthropic.types.ContentBlock):
+            if message.content and isinstance(message.content[0], ContentBlock):
                 return str(message.content[0].text) if hasattr(message.content[0], 'text') else ""
             return ""
             
