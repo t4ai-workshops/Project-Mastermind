@@ -1,0 +1,43 @@
+flowchart TD
+    USER[User Input] --> GUI[GUI Interface]
+    USER --> CLI[Command Line]
+    
+    subgraph SERVER[Server Layer]
+        API[FastAPI Server] --> MCP[MCP Manager]
+        GUI --> API
+        CLI --> API
+    end
+
+    subgraph MEMORY[Memory System]
+        MCP --> KC[Knowledge Cluster]
+        KC --> VDB[Vector Database]
+        VDB --> DB[(SQLite)]
+    end
+
+    subgraph AGENTS[Agent System]
+        MCP --> ORCH[Orchestrator]
+        ORCH --> SA[Strategist Agent]
+        ORCH --> WA[Worker Agent]
+        SA --> CLAUDE[Claude API]
+        WA --> CLAUDE
+    end
+
+    subgraph CONTEXT[Context Flow]
+        DB -.-> VDB
+        VDB -.-> KC
+        KC -.-> MCP
+        MCP -.-> ORCH
+    end
+
+    classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000000
+    classDef memory fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000000
+    classDef agents fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000000
+    classDef flow fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000000
+    classDef external fill:#fafafa,stroke:#424242,stroke-width:2px,color:#000000
+
+    class USER,GUI,CLI external
+    class API,MCP primary
+    class KC,VDB,DB memory
+    class ORCH,SA,WA agents
+    class CLAUDE external
+    class CONTEXT flow

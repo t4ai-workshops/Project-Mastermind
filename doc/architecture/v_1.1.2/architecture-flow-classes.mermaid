@@ -1,0 +1,45 @@
+flowchart TD
+    USER[User Input] --> GUI[GUI Interface\nApp.tsx\nChatInterface.tsx]
+    USER --> CLI[Command Line\ncurl]
+    
+    subgraph SERVER[Server Layer]
+        API[FastAPI Server\nserver.py] --> MCP[MCP Manager\nclass MCPManager\nclass MCPProvider\nclass MCPEnabledAgent]
+        GUI --> API
+        CLI --> API
+    end
+
+    subgraph MEMORY[Memory System]
+        MCP --> KC[Knowledge Cluster\nclass KnowledgeCluster\nShortTerm/LongTerm/Context]
+        KC --> VDB[Vector Database\nclass VectorDatabase\nclass VectorEntry]
+        VDB --> DB[(SQLite\nclass Memory\nclass Base)]
+        DB -.Context Return.-> VDB
+        VDB -.Context Return.-> KC
+        KC -.Context Return.-> MCP
+    end
+
+    subgraph AGENTS[Agent System]
+        MCP --> ORCH[Orchestrator\nclass Orchestrator]
+        ORCH --> SA[Strategist Agent\nclass StrategistAgent\nSonnet Model]
+        ORCH --> WA[Worker Agent\nclass WorkerAgent\nHaiku Model]
+        SA --> CLAUDE[Claude API\nclass ModelType\nclass TaskResult]
+        WA --> CLAUDE
+        CLAUDE -.Response.-> SA
+        CLAUDE -.Response.-> WA
+        SA -.Result.-> ORCH
+        WA -.Result.-> ORCH
+        ORCH -.Enhanced Context.-> MCP
+    end
+
+    MCP -.Store Results.-> KC
+
+    classDef primary fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000000
+    classDef memory fill:#fff3e0,stroke:#e65100,stroke-width:2px,color:#000000
+    classDef agents fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000000
+    classDef flow fill:#f3e5f5,stroke:#4a148c,stroke-width:2px,color:#000000
+    classDef external fill:#fafafa,stroke:#424242,stroke-width:2px,color:#000000
+
+    class USER,GUI,CLI external
+    class API,MCP primary
+    class KC,VDB,DB memory
+    class ORCH,SA,WA agents
+    class CLAUDE external
