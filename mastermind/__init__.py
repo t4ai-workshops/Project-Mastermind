@@ -30,7 +30,16 @@ from mastermind.database import Memory
 from mastermind.vectordb import VectorDatabase, VectorEntry
 from mastermind.knowledge_cluster import KnowledgeCluster
 
-__version__ = '0.1.2'
+# Server componenten toevoegen
+from mastermind.server import (
+    app,
+    ChatRequest,
+    CodeGenerationRequest,
+    MessageRequest,
+    MemoryManagementRequest
+)
+
+__version__ = '0.2.0'
 
 __all__ = [
     # Core system components
@@ -60,5 +69,12 @@ __all__ = [
     # Memory management components
     'VectorDatabase',
     'VectorEntry',
-    'KnowledgeCluster'
+    'KnowledgeCluster',
+    
+    # Server componenten toevoegen
+    'app',
+    'ChatRequest',
+    'CodeGenerationRequest',
+    'MessageRequest',
+    'MemoryManagementRequest',
 ]

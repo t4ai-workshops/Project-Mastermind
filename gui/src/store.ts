@@ -1,6 +1,6 @@
 /**
  * Mastermind AI Store
- * 
+ * Version 0.2.0
  * Central state management using Zustand.
  * Handles:
  * - Chat management

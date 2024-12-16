@@ -6,6 +6,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
+load_dotenv()
 import anthropic 
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Literal, List, Dict, Any, Optional
@@ -14,10 +15,10 @@ import uvicorn
 from contextlib import asynccontextmanager
 
 # Nieuwe imports
-from mastermind.knowledge_cluster import KnowledgeCluster
-from mastermind.vectordb import VectorEntry
-from mastermind.mcp import MCPManager
-from mastermind.database import add_memory, get_memories_by_category, init_db
+from .knowledge_cluster import KnowledgeCluster
+from .vectordb import VectorEntry
+from .mcp import MCPManager
+from .database import add_memory, get_memories_by_category, init_db
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -138,7 +139,7 @@ async def prepare_context(message: str, memories: List[VectorEntry]) -> str:
     ]) + f"\n\nOorspronkelijke bericht: {message}"
 
 async def process_api_call(model: str, context: str):
-    return await client.messages.create(
+    return client.messages.create(
         model=model,
         max_tokens=1000,
         messages=[{"role": "user", "content": context}]
@@ -206,7 +207,7 @@ async def process_message(request: MessageRequest):
         
         # Initialiseer MCPManager met KnowledgeCluster
         mcp_manager = MCPManager(knowledge_cluster)
-        enhanced_context = await mcp_manager.retrieve_context(request.message)
+        enhanced_context = await mcp_manager.get_context(request.message)
         logger.debug(f"Enhanced context from MCPManager: {enhanced_context}")
         
         # Voeg originele bericht toe aan de context

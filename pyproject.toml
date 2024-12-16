@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "project-mastermind"
-version = "0.1.2"
+version = "0.2.0"
 description = "An advanced multi-agent system leveraging different LLM models for enhanced cognitive capabilities"
 readme = "README.md"
 requires-python = ">=3.8"

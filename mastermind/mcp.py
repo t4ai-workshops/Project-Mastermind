@@ -2,7 +2,7 @@ from typing import Dict, List, Any, Optional, Callable, TypeVar, Protocol, Union
 from dataclasses import dataclass
 import asyncio
 from abc import ABC, abstractmethod
-from mastermind.knowledge_cluster import KnowledgeCluster
+from .knowledge_cluster import KnowledgeCluster
 from aiofiles import open as aio_open
 
 T_co = TypeVar('T_co', covariant=True)  # Covariant type variable

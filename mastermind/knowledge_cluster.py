@@ -7,7 +7,15 @@ from sentence_transformers import SentenceTransformer
 from .vectordb import VectorDatabase, VectorEntry
 
 class KnowledgeCluster:
-    """Gelaagd kennisopslagsysteem"""
+    """Layered Knowledge Storage System
+    
+    Manages two main context functions:
+    1. Memory Context: Persistent knowledge storage
+       Flow: server.py -> store_knowledge() -> vectordb.store_vector
+    
+    2. Knowledge Retrieval: Fetching relevant knowledge
+       Flow: MCPManager.get_context -> retrieve_knowledge() -> vectordb.query_vectors
+    """
     
     def __init__(
         self, 
@@ -54,14 +62,16 @@ class KnowledgeCluster:
         importance: float = 0.5,
         is_context_specific: bool = False
     ) -> str:
-        """
-        Sla kennis op in de juiste geheugendatabase
+        """Store knowledge in the appropriate memory database
         
-        :param content: Kennisinhoud
-        :param category: Categorie van de kennis
-        :param importance: Belang van de kennis
-        :param is_context_specific: Of het context-specifiek is
-        :return: Entry ID
+        This is the primary method for Memory Context - the persistent memory system.
+        Flow: server.py endpoints -> this method -> vectordb.store_vector
+        
+        Args:
+            content: The knowledge content to store
+            category: Knowledge category
+            importance: Importance score (0-1)
+            is_context_specific: Whether this is context-specific knowledge
         """
         embedding = await self.get_vector_embedding(content)
         
@@ -96,16 +106,14 @@ class KnowledgeCluster:
         include_context: bool = True,
         min_importance: float = 0.3
     ) -> List[VectorEntry]:
-        """
-        Zoek relevante kennis over verschillende geheugenniveaus
+        """Search for relevant knowledge across memory layers
         
-        :param query: Zoekopdracht
-        :param max_results: Maximum aantal resultaten
-        :param include_short_term: Zoek in korte termijn geheugen
-        :param include_long_term: Zoek in lange termijn geheugen
-        :param include_context: Zoek in context geheugen
-        :param min_importance: Minimale belang score
-        :return: Lijst van relevante kennisitems
+        This is the primary method for Knowledge Retrieval - used by Prompt Context.
+        Flow: MCPManager.get_context -> this method -> vectordb.query_vectors
+        
+        Args:
+            query: The search query
+            max_results: Maximum number of results to return
         """
         query_embedding = await self.get_vector_embedding(query)
         results: List[VectorEntry] = []
