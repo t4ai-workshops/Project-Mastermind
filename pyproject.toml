@@ -37,6 +37,11 @@ dependencies = [
     "transformers==4.47.0",
     "sentence-transformers>=2.2.2",
     "pydantic",
+    "fastapi>=0.115.6",
+    "uvicorn>=0.32.1",
+    "python-dotenv>=1.0.1",
+    "python-multipart>=0.0.19",
+    "huggingface-hub==0.24.0",
 ]
 
 [project.optional-dependencies]

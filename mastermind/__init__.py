@@ -32,7 +32,6 @@ from mastermind.knowledge_cluster import KnowledgeCluster
 
 # Server componenten toevoegen
 from mastermind.server import (
-    app,
     ChatRequest,
     CodeGenerationRequest,
     MessageRequest,
